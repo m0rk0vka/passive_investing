@@ -1,0 +1,21 @@
+# secrets
+.env
+*.env
+
+# local data
+data/
+*.xlsx
+*.xls
+.offset
+
+# build
+bin/
+dist/
+*.log
+
+# mac
+.DS_Store
+
+# editor
+.vscode/
+.idea/

@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	"financer/internal/telegram/core"
 	"fmt"
 	"os"
+
+	"github.com/m0rk0vka/passive_investing/internal/telegram/core"
 )
 
 func main() {

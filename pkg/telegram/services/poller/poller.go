@@ -2,11 +2,12 @@ package poller
 
 import (
 	"context"
-	"financer/pkg/telegram/entities"
-	updatesGetter "financer/pkg/telegram/services/updates_getter"
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
+	updatesGetter "github.com/m0rk0vka/passive_investing/pkg/telegram/services/updates_getter"
 )
 
 type TelegramBotPoller interface {

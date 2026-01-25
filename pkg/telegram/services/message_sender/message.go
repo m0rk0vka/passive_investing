@@ -1,6 +1,6 @@
 package messagesender
 
-import "financer/pkg/telegram/entities"
+import "github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
 
 type Message struct {
 	chatID         int64

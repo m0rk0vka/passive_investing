@@ -2,7 +2,8 @@ package ui
 
 import (
 	"context"
-	"financer/pkg/telegram/visualizer/entities"
+
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/visualizer/entities"
 )
 
 // These are boundaries. Later: postgres implementations.

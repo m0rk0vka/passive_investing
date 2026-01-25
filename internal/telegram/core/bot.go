@@ -2,10 +2,11 @@ package core
 
 import (
 	"context"
-	"financer/pkg/environment"
-	"financer/pkg/telegram/services/poller"
 	"net/http"
 	"time"
+
+	"github.com/m0rk0vka/passive_investing/pkg/environment"
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/poller"
 )
 
 type TelegramBot struct {

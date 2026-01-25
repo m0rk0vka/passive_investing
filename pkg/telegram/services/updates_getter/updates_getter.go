@@ -3,12 +3,13 @@ package updatesgetter
 import (
 	"encoding/json"
 	"errors"
-	"financer/pkg/telegram/entities"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
 )
 
 const getUpdatesURL = "https://api.telegram.org/bot%s/getUpdates"

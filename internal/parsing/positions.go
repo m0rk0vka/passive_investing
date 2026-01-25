@@ -7,7 +7,7 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"financer/internal/common"
+	"github.com/m0rk0vka/passive_investing/internal/common"
 )
 
 var reISIN = regexp.MustCompile(`[A-Z]{2}[A-Z0-9]{9}\d`)

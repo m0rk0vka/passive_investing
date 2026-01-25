@@ -1,8 +1,9 @@
 package ui
 
 import (
-	"financer/pkg/telegram/visualizer/entities"
 	"time"
+
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/visualizer/entities"
 )
 
 type Session struct {

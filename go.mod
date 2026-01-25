@@ -1,4 +1,4 @@
-module financer
+module github.com/m0rk0vka/passive_investing
 
 go 1.25.5
 

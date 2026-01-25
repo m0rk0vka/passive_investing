@@ -1,9 +1,10 @@
 package main
 
 import (
-	"financer/internal/parsing"
 	"fmt"
 	"os"
+
+	"github.com/m0rk0vka/passive_investing/internal/parsing"
 
 	"github.com/xuri/excelize/v2"
 )

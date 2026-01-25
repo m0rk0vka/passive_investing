@@ -2,8 +2,9 @@ package ui
 
 import (
 	"context"
-	"financer/pkg/telegram/visualizer/entities"
-	"financer/pkg/telegram/visualizer/renderers"
+
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/visualizer/entities"
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/visualizer/renderers"
 )
 
 type visualizer struct {

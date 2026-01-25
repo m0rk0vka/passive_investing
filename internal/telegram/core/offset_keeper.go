@@ -1,10 +1,11 @@
 package core
 
 import (
-	"financer/pkg/telegram/services/poller"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/poller"
 )
 
 var _ poller.OffsetKeepper = (*offsetKeepper)(nil)

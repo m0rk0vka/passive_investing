@@ -3,13 +3,14 @@ package filedownloader
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	filepathgetter "financer/pkg/telegram/services/filepath_getter"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
+
+	filepathgetter "github.com/m0rk0vka/passive_investing/pkg/telegram/services/filepath_getter"
 )
 
 const (

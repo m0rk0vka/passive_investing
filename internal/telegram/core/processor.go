@@ -1,13 +1,14 @@
 package core
 
 import (
-	"financer/pkg/telegram/entities"
-	filedownloader "financer/pkg/telegram/services/file_downloader"
-	messagesender "financer/pkg/telegram/services/message_sender"
-	"financer/pkg/telegram/services/poller"
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
+	filedownloader "github.com/m0rk0vka/passive_investing/pkg/telegram/services/file_downloader"
+	messagesender "github.com/m0rk0vka/passive_investing/pkg/telegram/services/message_sender"
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/poller"
 )
 
 var _ poller.UpdatesProcessor = (*updatesProcessor)(nil)

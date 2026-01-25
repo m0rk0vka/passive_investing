@@ -2,8 +2,9 @@ package renderers
 
 import (
 	"context"
-	domainEntities "financer/pkg/telegram/entities"
-	"financer/pkg/telegram/visualizer/entities"
+
+	domainEntities "github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/visualizer/entities"
 )
 
 type HomeRenderer struct{}

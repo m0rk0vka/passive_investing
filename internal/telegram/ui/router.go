@@ -2,10 +2,11 @@ package ui
 
 import (
 	"context"
-	messagesender "financer/pkg/telegram/message_sender"
-	"financer/pkg/telegram/visualizer/entities"
-	"financer/pkg/telegram/visualizer/renderers"
 	"net/http"
+
+	messagesender "github.com/m0rk0vka/passive_investing/pkg/telegram/message_sender"
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/visualizer/entities"
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/visualizer/renderers"
 )
 
 type TelegramBotVisualizer interface {

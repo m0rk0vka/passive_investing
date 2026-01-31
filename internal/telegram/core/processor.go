@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -17,6 +18,8 @@ import (
 var _ poller.UpdatesProcessor = (*updatesProcessor)(nil)
 
 type updatesProcessor struct {
+	ctx context.Context
+
 	client  *http.Client
 	token   string
 	dataDir string
@@ -29,8 +32,9 @@ type updatesProcessor struct {
 	visualizer ui.TelegramBotVisualizer
 }
 
-func NewUpdatesProcessor(client *http.Client, token string, dataDir string, logger *zap.Logger) (poller.UpdatesProcessor, error) {
+func NewUpdatesProcessor(ctx context.Context, client *http.Client, token string, dataDir string, logger *zap.Logger) (poller.UpdatesProcessor, error) {
 	u := &updatesProcessor{
+		ctx:     ctx,
 		client:  client,
 		token:   token,
 		dataDir: dataDir,
@@ -49,7 +53,7 @@ func (u *updatesProcessor) init() error {
 	}
 	u.fileDownloader = fileDownloader
 	u.messageSender = messagesender.NewMessageSender(u.client, u.token)
-	u.visualizer = ui.NewTelegramBotVisualizer(u.client, u.token)
+	u.visualizer = ui.NewTelegramBotVisualizer(u.ctx, u.client, u.token, u.logger)
 	u.callbackQueryAnswerer = callbackqueryanswerer.NewCallbackQueryAnswerer(u.client, u.token)
 	return nil
 }

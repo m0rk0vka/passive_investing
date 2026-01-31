@@ -66,6 +66,9 @@ func (t *telegramBotPoller) Polling() error {
 			time.Sleep(2 * time.Second)
 			continue
 		}
+		if len(updates) == 0 {
+			continue
+		}
 		fmt.Println("got updates:", updates)
 
 		processedOffset := t.updatesProcessor.ProcessUpdates(updates)

@@ -33,7 +33,7 @@ func (t *TelegramBot) init() error {
 	token := environment.MustEnv("BOT_TOKEN")
 	dataDir := environment.MustEnv("RAW_DATA_DIR")
 
-	updatesProcessor, err := NewUpdatesProcessor(client, token, dataDir, t.logger)
+	updatesProcessor, err := NewUpdatesProcessor(t.ctx, client, token, dataDir, t.logger)
 	if err != nil {
 		return err
 	}

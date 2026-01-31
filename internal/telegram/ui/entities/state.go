@@ -1,6 +1,9 @@
 package entities
 
-import "github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
+import (
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
+	"go.uber.org/zap/zapcore"
+)
 
 type Screen string
 
@@ -20,4 +23,10 @@ type UIState struct {
 type Rendered struct {
 	Text string
 	Kb   entities.InlineKeyboardMarkup
+}
+
+func (r Rendered) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddString("text", r.Text)
+	encoder.AddObject("kb", r.Kb)
+	return nil
 }

@@ -14,7 +14,7 @@ import (
 const editMessageTextURL = "https://api.telegram.org/bot%s/editMessageText"
 
 type MessageEditor interface {
-	EditMessageText(chatID int64, messageID int, text string, parseMode string, kb entities.InlineKeyboardMarkup) error
+	EditMessage(chatID int64, messageID int, text string, parseMode string, kb entities.InlineKeyboardMarkup) error
 }
 
 type messageEditor struct {
@@ -29,7 +29,7 @@ func NewMessageEditor(client *http.Client, token string) MessageEditor {
 	}
 }
 
-func (m *messageEditor) EditMessageText(
+func (m *messageEditor) EditMessage(
 	chatID int64,
 	messageID int,
 	text string,

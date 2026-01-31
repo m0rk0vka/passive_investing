@@ -11,6 +11,7 @@ import (
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/messagedeleter"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/messageeditor"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/messagesender"
+	"go.uber.org/zap"
 )
 
 type TelegramBotVisualizer interface {
@@ -19,21 +20,33 @@ type TelegramBotVisualizer interface {
 }
 
 type telegramBotVisualizer struct {
+	ctx    context.Context
+	logger *zap.Logger
+
 	client *http.Client
 	token  string
 
 	sessionStore SessionStore
+
+	visualizer *Visualizer
 
 	messageSender  messagesender.MessageSender
 	messageEditor  messageeditor.MessageEditor
 	messageDeleter messagedeleter.MessageDeleter
 }
 
-func NewTelegramBotVisualizer(client *http.Client, token string) TelegramBotVisualizer {
+func NewTelegramBotVisualizer(ctx context.Context, client *http.Client, token string, logger *zap.Logger) TelegramBotVisualizer {
 	return &telegramBotVisualizer{
-		client:         client,
-		token:          token,
-		sessionStore:   NewSessionStore(),
+		ctx:    ctx,
+		logger: logger,
+
+		client: client,
+		token:  token,
+
+		sessionStore: NewSessionStore(),
+
+		visualizer: NewVisualizer(renderers.Renderers),
+
 		messageSender:  messagesender.NewMessageSender(client, token),
 		messageDeleter: messagedeleter.NewMessageDeleter(client, token),
 		messageEditor:  messageeditor.NewMessageEditor(client, token),
@@ -74,10 +87,15 @@ func (t *telegramBotVisualizer) RenderHomeScreen(session Session) error {
 func (t *telegramBotVisualizer) ProcessCallbackQuery(callbackQuery *domainEntities.CallbackQuery) error {
 	session, ok := t.sessionStore.Get(callbackQuery.Message.Chat.ID)
 	if !ok {
-		return t.processCallbackForOldSession(callbackQuery)
+		if err := t.processCallbackForOldSession(callbackQuery); err != nil {
+			return fmt.Errorf("failed to process callbackQuery for old session %w", err)
+		}
+		return nil
 	}
 
-	_ = session
+	if err := t.processCallbackQuery(session, callbackQuery); err != nil {
+		return fmt.Errorf("failed to process callbackQuery for existed session %w", err)
+	}
 	return nil
 }
 
@@ -95,4 +113,43 @@ func (t *telegramBotVisualizer) processCallbackForOldSession(callbackQuery *doma
 	}
 
 	return nil
+}
+
+func (t *telegramBotVisualizer) processCallbackQuery(session Session, callbackQuery *domainEntities.CallbackQuery) error {
+	switch callbackQuery.Data {
+	case entities.CBClose:
+		err := t.messageDeleter.DeleteMessage(session.ChatID(), session.MessageID())
+		if err != nil {
+			return fmt.Errorf("failed to delete message: %w", err)
+		}
+		t.sessionStore.Delete(session.ChatID())
+		return nil
+	case entities.CBBack:
+		session.PopOrHome()
+	case entities.CBNavHome:
+		session = NewSession(session.ChatID())
+		session.SetMessageID(callbackQuery.Message.MessageID)
+		session.SetState(entities.UIState{
+			Screen: entities.ScreenHome,
+		})
+		t.sessionStore.Put(session.ChatID(), session)
+	case entities.CBNavPortfolios:
+		session.PushCurrentState()
+		session.SetState(entities.UIState{
+			Screen: entities.ScreenPortfolioList,
+		})
+	default:
+		return fmt.Errorf("unknown callback query: %s", callbackQuery.Data)
+	}
+
+	rendered, err := t.visualizer.Render(t.ctx, session.ChatID(), session.State)
+	if err != nil {
+		return fmt.Errorf("failed to render: %w", err)
+	}
+
+	t.logger.Info("visualiser result", zap.Object("rendered", rendered))
+
+	const parseMode = ""
+
+	return t.messageEditor.EditMessage(session.ChatID(), session.MessageID(), rendered.Text, parseMode, rendered.Kb)
 }

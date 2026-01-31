@@ -1,4 +1,4 @@
-package ui
+package repos
 
 import (
 	"context"

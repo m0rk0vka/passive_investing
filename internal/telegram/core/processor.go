@@ -15,6 +15,13 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	msgWelcome          = "Пришли мне XLSX отчёт документом, я сохраню его."
+	msgWrongFileFormat  = "Пришли как .xlsx, пожалуйста."
+	msgFileDownloadFail = "Не смог скачать файл: "
+	msgFileSaved        = "Файл сохранен.\nИмя: %s\nSHA256: %s"
+)
+
 var _ poller.UpdatesProcessor = (*updatesProcessor)(nil)
 
 type updatesProcessor struct {
@@ -80,7 +87,7 @@ func (u *updatesProcessor) processUpdate(update entities.Update) (offset int) {
 	if update.CallbackQuery != nil {
 		err := u.processCallbackQuery(update.CallbackQuery)
 		if err != nil {
-			fmt.Println("failed to process callback query", err)
+			u.logger.Error("failed to process callback query", zap.Error(err))
 			return
 		}
 		return
@@ -88,9 +95,9 @@ func (u *updatesProcessor) processUpdate(update entities.Update) (offset int) {
 
 	// Команды
 	if strings.HasPrefix(strings.TrimSpace(update.Message.Text), "/start") {
-		_, err := u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, "Пришли мне XLSX отчёт документом, я сохраню его."))
+		_, err := u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, msgWelcome))
 		if err != nil {
-			fmt.Println("failed to send message", err)
+			u.logger.Error("failed to send message", zap.Error(err))
 			return
 		}
 		return
@@ -99,7 +106,7 @@ func (u *updatesProcessor) processUpdate(update entities.Update) (offset int) {
 	if strings.HasPrefix(strings.TrimSpace(update.Message.Text), "/ui") {
 		err := u.visualizer.Visualize(update.Message.Chat.ID)
 		if err != nil {
-			fmt.Println("failed to render home screen", err)
+			u.logger.Error("failed to render home screen", zap.Error(err))
 			return
 		}
 		return
@@ -110,9 +117,9 @@ func (u *updatesProcessor) processUpdate(update entities.Update) (offset int) {
 		doc := update.Message.Document
 		// простая фильтрация по расширению
 		if !strings.HasSuffix(strings.ToLower(doc.FileName), ".xlsx") {
-			_, err := u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, "Пришли как .xlsx, пожалуйста."))
+			_, err := u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, msgWrongFileFormat))
 			if err != nil {
-				fmt.Println("failed to send message", err)
+				u.logger.Error("failed to send message", zap.Error(err))
 				return
 			}
 			return
@@ -120,18 +127,18 @@ func (u *updatesProcessor) processUpdate(update entities.Update) (offset int) {
 
 		sha, err := u.fileDownloader.DownloadFile(doc.FileID)
 		if err != nil {
-			_, err := u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, "Не смог скачать файл: "+err.Error()))
+			_, err := u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, msgFileDownloadFail+err.Error()))
 			if err != nil {
-				fmt.Println("failed to send message", err)
+				u.logger.Error("failed to send message", zap.Error(err))
 				return
 			}
 			return
 		}
 
-		msg := fmt.Sprintf("Файл сохранен.\nИмя: %s\nSHA256: %s", doc.FileName, sha)
+		msg := fmt.Sprintf(msgFileSaved, doc.FileName, sha)
 		_, err = u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, msg))
 		if err != nil {
-			fmt.Println("failed to send message", err)
+			u.logger.Error("failed to send message", zap.Error(err))
 			return
 		}
 	}
@@ -142,8 +149,7 @@ func (u *updatesProcessor) processUpdate(update entities.Update) (offset int) {
 func (u *updatesProcessor) processCallbackQuery(callbackQuery *entities.CallbackQuery) error {
 	err := u.callbackQueryAnswerer.AnswerCallbackQuery(callbackQuery.ID, "", false)
 	if err != nil {
-		fmt.Println("ERROR: failed to answer on callback query", err)
+		u.logger.Error("failed to answer on callback query", zap.Error(err))
 	}
 	return u.visualizer.ProcessCallbackQuery(callbackQuery)
-
 }

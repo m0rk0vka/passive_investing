@@ -14,6 +14,11 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	msgSessionExpired = "please run new /ui command"
+	parseModeDefault  = ""
+)
+
 type TelegramBotVisualizer interface {
 	Visualize(chatID int64) error
 	ProcessCallbackQuery(callbackQuery *domainEntities.CallbackQuery) error
@@ -57,7 +62,7 @@ func (t *telegramBotVisualizer) Visualize(chatID int64) error {
 	session, ok := t.sessionStore.Get(chatID)
 	if ok {
 		if err := t.messageDeleter.DeleteMessage(chatID, session.MessageID()); err != nil {
-			fmt.Println("WARNING: failed to delete old messsage %w", err)
+			t.logger.Warn("failed to delete old message", zap.Error(err))
 		}
 	}
 	session = NewSession(chatID)
@@ -101,15 +106,14 @@ func (t *telegramBotVisualizer) ProcessCallbackQuery(callbackQuery *domainEntiti
 
 func (t *telegramBotVisualizer) processCallbackForOldSession(callbackQuery *domainEntities.CallbackQuery) error {
 	chatID := callbackQuery.Message.Chat.ID
-	const sorryMsg = "please run new /ui command"
-	_, err := t.messageSender.SendMessage(messagesender.NewSimpleMessage(chatID, sorryMsg))
+	_, err := t.messageSender.SendMessage(messagesender.NewSimpleMessage(chatID, msgSessionExpired))
 	if err != nil {
-		fmt.Println("ERROR: failed to send sorry message: %w", err)
+		t.logger.Error("failed to send sorry message", zap.Error(err))
 	}
 
 	err = t.messageDeleter.DeleteMessage(callbackQuery.Message.Chat.ID, callbackQuery.Message.MessageID)
 	if err != nil {
-		fmt.Println("ERROR: failed to delete message: %w", err)
+		t.logger.Error("failed to delete message", zap.Error(err))
 	}
 
 	return nil
@@ -149,7 +153,5 @@ func (t *telegramBotVisualizer) processCallbackQuery(session Session, callbackQu
 
 	t.logger.Info("visualiser result", zap.Object("rendered", rendered))
 
-	const parseMode = ""
-
-	return t.messageEditor.EditMessage(session.ChatID(), session.MessageID(), rendered.Text, parseMode, rendered.Kb)
+	return t.messageEditor.EditMessage(session.ChatID(), session.MessageID(), rendered.Text, parseModeDefault, rendered.Kb)
 }

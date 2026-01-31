@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/m0rk0vka/passive_investing/internal/telegram/ui"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
 	filedownloader "github.com/m0rk0vka/passive_investing/pkg/telegram/services/file_downloader"
 	messagesender "github.com/m0rk0vka/passive_investing/pkg/telegram/services/message_sender"
@@ -20,6 +21,7 @@ type updatesProcessor struct {
 
 	messageSender  messagesender.MessageSender
 	fileDownloader filedownloader.FileDownloader
+	visualizer     ui.TelegramBotVisualizer
 }
 
 func NewUpdatesProcessor(client *http.Client, token string, dataDir string) (poller.UpdatesProcessor, error) {
@@ -41,6 +43,7 @@ func (u *updatesProcessor) init() error {
 	}
 	u.fileDownloader = fileDownloader
 	u.messageSender = messagesender.NewMessageSender(u.client, u.token)
+	u.visualizer = ui.NewTelegramBotVisualizer(u.client, u.token)
 	return nil
 }
 
@@ -62,32 +65,48 @@ func (u *updatesProcessor) processUpdate(update entities.Update) (offset int) {
 
 	// Команды
 	if strings.HasPrefix(strings.TrimSpace(update.Message.Text), "/start") {
-		_ = u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, "Пришли мне XLSX отчёт документом, я сохраню его."))
+		_, err := u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, "Пришли мне XLSX отчёт документом, я сохраню его."))
+		if err != nil {
+			fmt.Println("failed to send message", err)
+			return
+		}
 		return
 	}
 
-	// if strings.HasPrefix(strings.TrimSpace(update.Message.Text), "/ui") {
-	// 	_ = u.visualizer.Visualize(update.Message.Chat.ID)
-	// 	continue
-	// }
+	if strings.HasPrefix(strings.TrimSpace(update.Message.Text), "/ui") {
+		_ = u.visualizer.Visualize(update.Message.Chat.ID)
+		return
+	}
 
 	// Документ
 	if update.Message.Document != nil {
 		doc := update.Message.Document
 		// простая фильтрация по расширению
 		if !strings.HasSuffix(strings.ToLower(doc.FileName), ".xlsx") {
-			_ = u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, "Пришли как .xlsx, пожалуйста."))
+			_, err := u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, "Пришли как .xlsx, пожалуйста."))
+			if err != nil {
+				fmt.Println("failed to send message", err)
+				return
+			}
 			return
 		}
 
 		sha, err := u.fileDownloader.DownloadFile(doc.FileID)
 		if err != nil {
-			_ = u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, "Не смог скачать файл: "+err.Error()))
+			_, err := u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, "Не смог скачать файл: "+err.Error()))
+			if err != nil {
+				fmt.Println("failed to send message", err)
+				return
+			}
 			return
 		}
 
 		msg := fmt.Sprintf("Файл сохранен.\nИмя: %s\nSHA256: %s", doc.FileName, sha)
-		_ = u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, msg))
+		_, err = u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, msg))
+		if err != nil {
+			fmt.Println("failed to send message", err)
+			return
+		}
 	}
 
 	return

@@ -32,11 +32,29 @@ func NewTelegramBotVisualizer(client *http.Client, token string) TelegramBotVisu
 }
 
 func (t *telegramBotVisualizer) Visualize(chatID int64) error {
-	return t.RenderHomeScreen(chatID)
+	session, ok := t.sessionStore.Get(chatID)
+	if !ok {
+		session = NewSession(chatID)
+		t.sessionStore.Put(chatID, session)
+	}
+
+	err := t.RenderHomeScreen(session)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (t telegramBotVisualizer) RenderHomeScreen(chatID int64) error {
+func (t telegramBotVisualizer) RenderHomeScreen(session Session) error {
 	hr := renderers.HomeRenderer{}
 	data, _ := hr.Render(context.TODO(), 0, entities.UIState{})
-	return t.messageSender.SendMessage(messagesender.NewInlineKeyboardMessage(chatID, data.Text, data.Kb))
+	messageID, err := t.messageSender.SendMessage(
+		messagesender.NewInlineKeyboardMessage(session.ChatID(), data.Text, data.Kb))
+	if err != nil {
+		return err
+	}
+	session.SetMessageID(messageID)
+	t.sessionStore.Put(session.ChatID(), session)
+	return nil
 }

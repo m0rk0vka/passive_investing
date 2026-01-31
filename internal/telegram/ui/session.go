@@ -7,14 +7,27 @@ import (
 )
 
 type Session struct {
-	MessageID int
+	chatID    int64
+	messageID int
 	State     entities.UIState
 	Stack     []entities.UIState
 	UpdatedAt time.Time
 }
 
-func NewSession(messageID int) Session {
+func NewSession(chatID int64) Session {
 	return Session{
-		MessageID: messageID,
+		chatID: chatID,
 	}
+}
+
+func (s Session) ChatID() int64 {
+	return s.chatID
+}
+
+func (s Session) MessageID() int {
+	return s.messageID
+}
+
+func (s Session) SetMessageID(messageID int) {
+	s.messageID = messageID
 }

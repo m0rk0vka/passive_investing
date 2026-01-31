@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	messagesender "github.com/m0rk0vka/passive_investing/pkg/telegram/message_sender"
-	"github.com/m0rk0vka/passive_investing/pkg/telegram/visualizer/entities"
-	"github.com/m0rk0vka/passive_investing/pkg/telegram/visualizer/renderers"
+	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/entities"
+	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/renderers"
+	messagesender "github.com/m0rk0vka/passive_investing/pkg/telegram/services/message_sender"
 )
 
 type TelegramBotVisualizer interface {

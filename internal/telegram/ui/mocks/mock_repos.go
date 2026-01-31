@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/m0rk0vka/passive_investing/pkg/telegram/visualizer/entities"
+	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/entities"
 )
 
 type MockPortfolioRepo struct{}

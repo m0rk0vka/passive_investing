@@ -7,8 +7,8 @@ import (
 
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
-	filedownloader "github.com/m0rk0vka/passive_investing/pkg/telegram/services/file_downloader"
-	messagesender "github.com/m0rk0vka/passive_investing/pkg/telegram/services/message_sender"
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/filedownloader"
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/messagesender"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/poller"
 )
 
@@ -74,7 +74,11 @@ func (u *updatesProcessor) processUpdate(update entities.Update) (offset int) {
 	}
 
 	if strings.HasPrefix(strings.TrimSpace(update.Message.Text), "/ui") {
-		_ = u.visualizer.Visualize(update.Message.Chat.ID)
+		err := u.visualizer.Visualize(update.Message.Chat.ID)
+		if err != nil {
+			fmt.Println("failed to render home screen", err)
+			return
+		}
 		return
 	}
 

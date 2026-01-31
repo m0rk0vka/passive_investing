@@ -28,6 +28,6 @@ func (s Session) MessageID() int {
 	return s.messageID
 }
 
-func (s Session) SetMessageID(messageID int) {
+func (s *Session) SetMessageID(messageID int) {
 	s.messageID = messageID
 }

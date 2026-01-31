@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
-	filepathgetter "github.com/m0rk0vka/passive_investing/pkg/telegram/services/filepath_getter"
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/filepathgetter"
 )
 
 const (

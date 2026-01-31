@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
-	updatesGetter "github.com/m0rk0vka/passive_investing/pkg/telegram/services/updates_getter"
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/updatesgetter"
 )
 
 type TelegramBotPoller interface {
@@ -26,7 +26,7 @@ type OffsetKeepper interface {
 type telegramBotPoller struct {
 	ctx context.Context
 
-	updatesGetter    updatesGetter.UpdatesGetter
+	updatesGetter    updatesgetter.UpdatesGetter
 	updatesProcessor UpdatesProcessor
 
 	offsetKeepper OffsetKeepper
@@ -41,7 +41,7 @@ func NewTelegramBotPoller(
 ) TelegramBotPoller {
 	return &telegramBotPoller{
 		ctx:              ctx,
-		updatesGetter:    updatesGetter.NewUpdatesGetter(client, token),
+		updatesGetter:    updatesgetter.NewUpdatesGetter(client, token),
 		updatesProcessor: updatesProcessor,
 		offsetKeepper:    offsetKeepper,
 	}

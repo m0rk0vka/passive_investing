@@ -7,12 +7,15 @@ import (
 
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/entities"
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/renderers"
+	domainEntities "github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/messagedeleter"
+	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/messageeditor"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/messagesender"
 )
 
 type TelegramBotVisualizer interface {
 	Visualize(chatID int64) error
+	ProcessCallbackQuery(callbackQuery *domainEntities.CallbackQuery) error
 }
 
 type telegramBotVisualizer struct {
@@ -22,6 +25,7 @@ type telegramBotVisualizer struct {
 	sessionStore SessionStore
 
 	messageSender  messagesender.MessageSender
+	messageEditor  messageeditor.MessageEditor
 	messageDeleter messagedeleter.MessageDeleter
 }
 
@@ -32,6 +36,7 @@ func NewTelegramBotVisualizer(client *http.Client, token string) TelegramBotVisu
 		sessionStore:   NewSessionStore(),
 		messageSender:  messagesender.NewMessageSender(client, token),
 		messageDeleter: messagedeleter.NewMessageDeleter(client, token),
+		messageEditor:  messageeditor.NewMessageEditor(client, token),
 	}
 }
 
@@ -63,5 +68,31 @@ func (t *telegramBotVisualizer) RenderHomeScreen(session Session) error {
 	}
 	session.SetMessageID(messageID)
 	t.sessionStore.Put(session.ChatID(), session)
+	return nil
+}
+
+func (t *telegramBotVisualizer) ProcessCallbackQuery(callbackQuery *domainEntities.CallbackQuery) error {
+	session, ok := t.sessionStore.Get(callbackQuery.Message.Chat.ID)
+	if !ok {
+		return t.processCallbackForOldSession(callbackQuery)
+	}
+
+	_ = session
+	return nil
+}
+
+func (t *telegramBotVisualizer) processCallbackForOldSession(callbackQuery *domainEntities.CallbackQuery) error {
+	chatID := callbackQuery.Message.Chat.ID
+	const sorryMsg = "please run new /ui command"
+	_, err := t.messageSender.SendMessage(messagesender.NewSimpleMessage(chatID, sorryMsg))
+	if err != nil {
+		fmt.Println("ERROR: failed to send sorry message: %w", err)
+	}
+
+	err = t.messageDeleter.DeleteMessage(callbackQuery.Message.Chat.ID, callbackQuery.Message.MessageID)
+	if err != nil {
+		fmt.Println("ERROR: failed to delete message: %w", err)
+	}
+
 	return nil
 }

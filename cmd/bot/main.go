@@ -6,17 +6,24 @@ import (
 	"os"
 
 	"github.com/m0rk0vka/passive_investing/internal/telegram/core"
+	"go.uber.org/zap"
 )
 
 func main() {
-	telegramBot, err := core.NewTelegramBot(context.Background())
+	// Создаем production логгер
+	logger, err := zap.NewProduction()
 	if err != nil {
-		fmt.Println("Error creating telegram bot:", err)
+		fmt.Println("Error creating logger:", err)
 		os.Exit(1)
+	}
+	defer logger.Sync()
+
+	telegramBot, err := core.NewTelegramBot(context.Background(), logger)
+	if err != nil {
+		logger.Fatal("Error creating telegram bot", zap.Error(err))
 	}
 
 	if err := telegramBot.Start(); err != nil {
-		fmt.Println("Error starting telegram bot:", err)
-		os.Exit(1)
+		logger.Fatal("Error starting telegram bot", zap.Error(err))
 	}
 }

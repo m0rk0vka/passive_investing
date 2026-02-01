@@ -33,7 +33,7 @@ type telegramBotVisualizer struct {
 
 	sessionStore SessionStore
 
-	visualizer *Visualizer
+	renderer *Renderer
 
 	messageSender  messagesender.MessageSender
 	messageEditor  messageeditor.MessageEditor
@@ -50,7 +50,7 @@ func NewTelegramBotVisualizer(ctx context.Context, client *http.Client, token st
 
 		sessionStore: NewSessionStore(),
 
-		visualizer: NewVisualizer(renderers.Renderers),
+		renderer: NewRenderer(renderers.Renderers),
 
 		messageSender:  messagesender.NewMessageSender(client, token),
 		messageDeleter: messagedeleter.NewMessageDeleter(client, token),
@@ -146,7 +146,7 @@ func (t *telegramBotVisualizer) processCallbackQuery(session Session, callbackQu
 		return fmt.Errorf("unknown callback query: %s", callbackQuery.Data)
 	}
 
-	rendered, err := t.visualizer.Render(t.ctx, session.ChatID(), session.State)
+	rendered, err := t.renderer.Render(t.ctx, session.ChatID(), session.State)
 	if err != nil {
 		return fmt.Errorf("failed to render: %w", err)
 	}

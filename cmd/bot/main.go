@@ -11,7 +11,7 @@ import (
 
 func main() {
 	// Создаем production логгер
-	logger, err := zap.NewProduction()
+	logger, err := zap.NewDevelopment()
 	if err != nil {
 		fmt.Println("Error creating logger:", err)
 		os.Exit(1)

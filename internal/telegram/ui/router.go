@@ -143,7 +143,15 @@ func (t *telegramBotVisualizer) processCallbackQuery(session Session, callbackQu
 			Screen: entities.ScreenPortfolioList,
 		})
 	default:
-		return fmt.Errorf("unknown callback query: %s", callbackQuery.Data)
+		portfolioId, ok := entities.IsOpenPortfolio(callbackQuery.Data)
+		if !ok {
+			return fmt.Errorf("unknown callback query: %s", callbackQuery.Data)
+		}
+		session.PushCurrentState()
+		session.SetState(entities.UIState{
+			Screen:      entities.ScreenPortfolioSum,
+			PortfolioID: portfolioId,
+		})
 	}
 
 	rendered, err := t.renderer.Render(t.ctx, session.ChatID(), session.State)

@@ -30,6 +30,9 @@ func (r *PortfolioSumRenderer) Render(ctx context.Context, userID int64, st enti
 
 	var rows [][]domainEntities.InlineKeyboardButton
 
+	rows = append(rows, domainEntities.NewInlineKeyboardRow(
+		domainEntities.NewInlineKeyboardButton("Позиции", entities.CBNavPositions)))
+
 	if len(periods) != 1 {
 		rows = append(rows, domainEntities.NewInlineKeyboardRow(
 			domainEntities.NewInlineKeyboardButton("⬅️ Предыдущий период", entities.CBPeriodPrev)))

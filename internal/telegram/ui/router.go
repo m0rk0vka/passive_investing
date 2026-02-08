@@ -136,11 +136,17 @@ func (t *telegramBotVisualizer) processCallbackQuery(session Session, callbackQu
 		session.SetState(entities.UIState{
 			Screen: entities.ScreenHome,
 		})
-		t.sessionStore.Put(session.ChatID(), session)
 	case entities.CBNavPortfolios:
 		session.PushCurrentState()
 		session.SetState(entities.UIState{
 			Screen: entities.ScreenPortfolioList,
+		})
+	case entities.CBNavPositions:
+		session.PushCurrentState()
+		session.SetState(entities.UIState{
+			Screen:      entities.ScreenPortfolioPositions,
+			PortfolioID: session.State.PortfolioID,
+			Period:      session.State.Period,
 		})
 	default:
 		portfolioId, ok := entities.IsOpenPortfolio(callbackQuery.Data)
@@ -153,6 +159,8 @@ func (t *telegramBotVisualizer) processCallbackQuery(session Session, callbackQu
 			PortfolioID: portfolioId,
 		})
 	}
+
+	t.sessionStore.Put(session.ChatID(), session)
 
 	rendered, err := t.renderer.Render(t.ctx, session.ChatID(), session.State)
 	if err != nil {

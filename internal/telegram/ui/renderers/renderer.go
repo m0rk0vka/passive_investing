@@ -19,4 +19,7 @@ var Renderers = map[entities.Screen]Renderer{
 	entities.ScreenPortfolioSum: &PortfolioSumRenderer{
 		Repo: &mocks.MockPortfolioRepo{},
 	},
+	entities.ScreenPortfolioPositions: &PortfolioPositionsRenderer{
+		Repo: &mocks.MockPortfolioRepo{},
+	},
 }

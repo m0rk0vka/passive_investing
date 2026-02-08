@@ -8,10 +8,10 @@ import (
 type Screen string
 
 const (
-	ScreenHome          Screen = "HOME"
-	ScreenPortfolioList Screen = "PORTFOLIO_LIST"
-	ScreenPortfolioSum  Screen = "PORTFOLIO_SUMMARY"
-	ScreenPositions     Screen = "POSITIONS"
+	ScreenHome               Screen = "HOME"
+	ScreenPortfolioList      Screen = "PORTFOLIO_LIST"
+	ScreenPortfolioSum       Screen = "PORTFOLIO_SUMMARY"
+	ScreenPortfolioPositions Screen = "POSITIONS"
 )
 
 type UIState struct {

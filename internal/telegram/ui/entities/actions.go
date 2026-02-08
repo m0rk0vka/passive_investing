@@ -6,13 +6,14 @@ import "strings"
 const (
 	CBNavHome       = "nav:home"
 	CBNavPortfolios = "nav:portfolios"
+	CBNavPositions  = "nav:positions"
+	CBNavPeriods    = "nav:periods"
 
 	CBBack  = "back"
 	CBClose = "close"
 
-	CBTabPositions = "tab:positions"
-	CBPeriodPrev   = "period:prev"
-	CBPeriodNext   = "period:next"
+	CBPeriodPrev = "period:prev"
+	CBPeriodNext = "period:next"
 )
 
 // Parameterized callbacks

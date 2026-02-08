@@ -2,10 +2,14 @@ package mocks
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/entities"
+	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/repos"
 )
+
+var _ repos.PortfolioRepo = (*MockPortfolioRepo)(nil)
 
 type MockPortfolioRepo struct{}
 
@@ -21,6 +25,30 @@ func (m *MockPortfolioRepo) ListPeriods(ctx context.Context, userID int64, portf
 	return []string{"2025-10", "2025-11", "2025-12"}, nil
 }
 
+func (m *MockPortfolioRepo) GetLastPeriod(ctx context.Context, userID int64, portfolioID string) (string, error) {
+	return "2025-12", nil
+}
+
+func (m *MockPortfolioRepo) GetNextPeriod(ctx context.Context, userID int64, portfolioID string, period string) (string, error) {
+	if period == "2025-12" {
+		return "", fmt.Errorf("no next period")
+	}
+	if period == "2025-11" {
+		return "2025-12", nil
+	}
+	return "2025-11", nil
+}
+
+func (m *MockPortfolioRepo) GetPrevPeriod(ctx context.Context, userID int64, portfolioID string, period string) (string, error) {
+	if period == "2025-10" {
+		return "", fmt.Errorf("no prev period")
+	}
+	if period == "2025-11" {
+		return "2025-10", nil
+	}
+	return "2025-11", nil
+}
+
 func (m *MockPortfolioRepo) GetSummary(ctx context.Context, userID int64, portfolioID string, period string) (entities.PortfolioSummary, error) {
 	return entities.PortfolioSummary{
 		PortfolioID: portfolioID,
@@ -33,6 +61,17 @@ func (m *MockPortfolioRepo) GetSummary(ctx context.Context, userID int64, portfo
 }
 
 func (m *MockPortfolioRepo) ListPositions(ctx context.Context, userID int64, portfolioID string, period string) ([]entities.Position, error) {
+	if period == "2025-10" {
+		return []entities.Position{
+			{ISIN: "RU000A10CKT3", Name: "ОФЗ 26251", Qty: "50", Value: entities.Money{Amount: "43 709.73", Currency: "RUB"}},
+		}, nil
+	}
+	if period == "2025-11" {
+		return []entities.Position{
+			{ISIN: "RU000A10CKT3", Name: "ОФЗ 26251", Qty: "50", Value: entities.Money{Amount: "43 709.73", Currency: "RUB"}},
+			{ISIN: "RU000A101EJ5", Name: "EQMX ETF", Qty: "370", Value: entities.Money{Amount: "52 466.00", Currency: "RUB"}},
+		}, nil
+	}
 	return []entities.Position{
 		{ISIN: "RU000A10CKT3", Name: "ОФЗ 26251", Qty: "50", Value: entities.Money{Amount: "43 709.73", Currency: "RUB"}},
 		{ISIN: "RU000A101EJ5", Name: "EQMX ETF", Qty: "370", Value: entities.Money{Amount: "52 466.00", Currency: "RUB"}},

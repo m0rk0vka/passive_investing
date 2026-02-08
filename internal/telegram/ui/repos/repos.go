@@ -14,6 +14,10 @@ type PortfolioRepo interface {
 	// months that have data for this portfolio, sorted asc: ["2025-10","2025-11","2025-12"]
 	ListPeriods(ctx context.Context, userID int64, portfolioID string) ([]string, error)
 
+	GetLastPeriod(ctx context.Context, userID int64, portfolioID string) (string, error)
+	GetNextPeriod(ctx context.Context, userID int64, portfolioID string, period string) (string, error)
+	GetPrevPeriod(ctx context.Context, userID int64, portfolioID string, period string) (string, error)
+
 	GetSummary(ctx context.Context, userID int64, portfolioID string, period string) (entities.PortfolioSummary, error)
 	ListPositions(ctx context.Context, userID int64, portfolioID string, period string) ([]entities.Position, error)
 }

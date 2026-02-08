@@ -14,16 +14,7 @@ type PortfolioSumRenderer struct {
 }
 
 func (r *PortfolioSumRenderer) Render(ctx context.Context, userID int64, st entities.UIState) (entities.Rendered, error) {
-	periods, err := r.Repo.ListPeriods(ctx, userID, st.PortfolioID)
-	if err != nil {
-		return entities.Rendered{}, fmt.Errorf("failed to get periods: %w", err)
-	}
-
-	if len(periods) == 0 {
-		return entities.Rendered{}, fmt.Errorf("portfolio is empty")
-	}
-
-	summary, err := r.Repo.GetSummary(ctx, userID, st.PortfolioID, periods[len(periods)-1])
+	summary, err := r.Repo.GetSummary(ctx, userID, st.PortfolioID, st.Period)
 	if err != nil {
 		return entities.Rendered{}, fmt.Errorf("failed to get summary: %w", err)
 	}
@@ -33,10 +24,8 @@ func (r *PortfolioSumRenderer) Render(ctx context.Context, userID int64, st enti
 	rows = append(rows, domainEntities.NewInlineKeyboardRow(
 		domainEntities.NewInlineKeyboardButton("Позиции", entities.CBNavPositions)))
 
-	if len(periods) != 1 {
-		rows = append(rows, domainEntities.NewInlineKeyboardRow(
-			domainEntities.NewInlineKeyboardButton("⬅️ Предыдущий период", entities.CBPeriodPrev)))
-	}
+	rows = append(rows, domainEntities.NewInlineKeyboardRow(
+		domainEntities.NewInlineKeyboardButton("Периоды", entities.CBNavPeriods)))
 
 	rows = append(rows, domainEntities.NewInlineKeyboardRow(
 		domainEntities.NewInlineKeyboardButton("⬅️ Назад", entities.CBBack),

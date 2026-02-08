@@ -6,7 +6,9 @@ import (
 	"net/http"
 
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/entities"
+	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/mocks"
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/renderers"
+	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/repos"
 	domainEntities "github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/messagedeleter"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/messageeditor"
@@ -38,6 +40,8 @@ type telegramBotVisualizer struct {
 	messageSender  messagesender.MessageSender
 	messageEditor  messageeditor.MessageEditor
 	messageDeleter messagedeleter.MessageDeleter
+
+	repo repos.PortfolioRepo
 }
 
 func NewTelegramBotVisualizer(ctx context.Context, client *http.Client, token string, logger *zap.Logger) TelegramBotVisualizer {
@@ -55,6 +59,8 @@ func NewTelegramBotVisualizer(ctx context.Context, client *http.Client, token st
 		messageSender:  messagesender.NewMessageSender(client, token),
 		messageDeleter: messagedeleter.NewMessageDeleter(client, token),
 		messageEditor:  messageeditor.NewMessageEditor(client, token),
+
+		repo: &mocks.MockPortfolioRepo{},
 	}
 }
 
@@ -148,15 +154,40 @@ func (t *telegramBotVisualizer) processCallbackQuery(session Session, callbackQu
 			PortfolioID: session.State.PortfolioID,
 			Period:      session.State.Period,
 		})
+	case entities.CBPeriodNext:
+		nextPeriod, err := t.repo.GetNextPeriod(t.ctx, session.ChatID(), session.State.PortfolioID, session.State.Period)
+		if err != nil {
+			return fmt.Errorf("failed to get next period: %w", err)
+		}
+		session.SetState(entities.UIState{
+			Screen:      entities.ScreenPortfolioPositions,
+			PortfolioID: session.State.PortfolioID,
+			Period:      nextPeriod,
+		})
+	case entities.CBPeriodPrev:
+		prevPeriod, err := t.repo.GetPrevPeriod(t.ctx, session.ChatID(), session.State.PortfolioID, session.State.Period)
+		if err != nil {
+			return fmt.Errorf("failed to get prev period: %w", err)
+		}
+		session.SetState(entities.UIState{
+			Screen:      entities.ScreenPortfolioPositions,
+			PortfolioID: session.State.PortfolioID,
+			Period:      prevPeriod,
+		})
 	default:
 		portfolioId, ok := entities.IsOpenPortfolio(callbackQuery.Data)
 		if !ok {
 			return fmt.Errorf("unknown callback query: %s", callbackQuery.Data)
 		}
+		lastPeriod, err := t.repo.GetLastPeriod(t.ctx, session.ChatID(), session.State.PortfolioID)
+		if err != nil {
+			return fmt.Errorf("failed to get last period: %w", err)
+		}
 		session.PushCurrentState()
 		session.SetState(entities.UIState{
 			Screen:      entities.ScreenPortfolioSum,
 			PortfolioID: portfolioId,
+			Period:      lastPeriod,
 		})
 	}
 

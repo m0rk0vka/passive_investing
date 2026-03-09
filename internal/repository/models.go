@@ -140,3 +140,13 @@ type CashFlowOperation struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }
+
+// DepositsInfo represents aggregated information about deposits
+type DepositsInfo struct {
+	TotalAmount decimal.Decimal
+	Currency    string
+	// Можно добавить в будущем:
+	// FirstDepositDate *time.Time
+	// LastDepositDate  *time.Time
+	// Count            int
+}

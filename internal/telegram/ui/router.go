@@ -51,6 +51,7 @@ func NewTelegramBotVisualizer(ctx context.Context, client *http.Client, token st
 	snapshotRepo := repository.NewSnapshotRepository(db)
 	accountRepo := repository.NewAccountRepository(db)
 	virtualPortfolioRepo := repository.NewVirtualPortfolioRepository(db)
+	cashFlowRepo := repository.NewCashFlowRepository(db)
 
 	// Initialize domain services
 	idResolver := domain.NewPortfolioIDResolver(virtualPortfolioRepo)
@@ -60,7 +61,7 @@ func NewTelegramBotVisualizer(ctx context.Context, client *http.Client, token st
 	// Initialize application services
 	listService := services.NewPortfolioListService(accountRepo, virtualPortfolioRepo)
 	periodsService := services.NewPortfolioPeriodsService(snapshotRepo, idResolver, snapshotAggregator)
-	summaryService := services.NewPortfolioSummaryService(idResolver, snapshotAggregator)
+	summaryService := services.NewPortfolioSummaryService(idResolver, snapshotAggregator, cashFlowRepo)
 	positionsService := services.NewPortfolioPositionsService(idResolver, snapshotAggregator, percentageCalculator)
 
 	return &telegramBotVisualizer{

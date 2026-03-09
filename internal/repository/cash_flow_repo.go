@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"database/sql"
+
+	"github.com/shopspring/decimal"
 )
 
 // CashFlowRepository handles cash flow operations
@@ -85,4 +87,31 @@ func (r *CashFlowRepository) ListCashFlowOperations(ctx context.Context, account
 	}
 
 	return operations, rows.Err()
+}
+
+// GetDepositsInfo returns aggregated information about deposits for given accounts up to and including the specified period
+// Period format: "2025-10" (YYYY-MM)
+func (r *CashFlowRepository) GetDepositsInfo(ctx context.Context, accountIDs []int64, upToPeriod string) (*DepositsInfo, error) {
+	if len(accountIDs) == 0 {
+		return &DepositsInfo{
+			TotalAmount: decimal.Zero,
+			Currency:    "RUB",
+		}, nil
+	}
+
+	query := `
+		SELECT COALESCE(SUM(amount), 0) as total, COALESCE(MAX(currency), 'RUB') as currency
+		FROM cash_flow_operation
+		WHERE account_id = ANY($1)
+		  AND operation_type = 'DEPOSIT'
+		  AND period <= $2
+	`
+
+	var info DepositsInfo
+	err := r.db.QueryRowContext(ctx, query, accountIDs, upToPeriod).Scan(&info.TotalAmount, &info.Currency)
+	if err != nil {
+		return nil, err
+	}
+
+	return &info, nil
 }

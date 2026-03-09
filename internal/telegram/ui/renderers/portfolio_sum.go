@@ -30,6 +30,21 @@ func (r *PortfolioSumRenderer) Render(ctx context.Context, userID int64, st enti
 		return entities.Rendered{}, fmt.Errorf("failed to get summary: %w", err)
 	}
 
+	// Формируем текст с детальной информацией
+	text := fmt.Sprintf("📊 Портфель за период %s\n\n", summary.Period)
+
+	// Общая сумма
+	text += fmt.Sprintf("💰 Общая сумма: %s\n\n", summary.Total.String())
+
+	// Пополнения
+	text += fmt.Sprintf("📥 Пополнения: %s\n", summary.Deposits.String())
+	text += fmt.Sprintf("   └ %s%% от общей суммы\n\n", summary.DepositsPct)
+
+	// Заработано
+	text += fmt.Sprintf("📈 Заработано: %s\n", summary.Earnings.String())
+	text += fmt.Sprintf("   └ %s%% от общей суммы\n", summary.EarningsPct)
+	text += fmt.Sprintf("   └ %s%% доходность\n", summary.ReturnPct)
+
 	var rows [][]domainEntities.InlineKeyboardButton
 
 	rows = append(rows, domainEntities.NewInlineKeyboardRow(
@@ -44,7 +59,7 @@ func (r *PortfolioSumRenderer) Render(ctx context.Context, userID int64, st enti
 	))
 
 	return entities.Rendered{
-		Text: fmt.Sprintf("Сумма портфеля за период %s: %s", summary.Period, summary.Total.String()),
+		Text: text,
 		Kb:   domainEntities.NewInlineKeyboardMarkup(rows...),
 	}, nil
 }

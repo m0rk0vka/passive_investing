@@ -112,3 +112,31 @@ type PortfolioAccount struct {
 	AccountID   int64
 	CreatedAt   time.Time
 }
+
+// CashFlowOperationType represents the type of cash flow operation
+type CashFlowOperationType string
+
+const (
+	CashFlowOpTypeDeposit          CashFlowOperationType = "DEPOSIT"
+	CashFlowOpTypeWithdrawal       CashFlowOperationType = "WITHDRAWAL"
+	CashFlowOpTypeSecurityPurchase CashFlowOperationType = "SECURITY_PURCHASE"
+	CashFlowOpTypeSecuritySale     CashFlowOperationType = "SECURITY_SALE"
+	CashFlowOpTypeDividend         CashFlowOperationType = "DIVIDEND"
+	CashFlowOpTypeTax              CashFlowOperationType = "TAX"
+	CashFlowOpTypeFee              CashFlowOperationType = "FEE"
+	CashFlowOpTypeOther            CashFlowOperationType = "OTHER"
+)
+
+// CashFlowOperation represents a cash flow operation in the database
+type CashFlowOperation struct {
+	ID            int64
+	AccountID     int64
+	Period        string // "2025-10"
+	OperationDate time.Time
+	Amount        decimal.Decimal
+	Currency      string
+	OperationType CashFlowOperationType
+	Comment       string
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+}

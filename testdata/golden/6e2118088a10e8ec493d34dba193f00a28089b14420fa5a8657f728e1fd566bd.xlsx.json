@@ -1,0 +1,95 @@
+{
+  "PeriodStart": "2026-02-01T00:00:00Z",
+  "PeriodEnd": "2026-02-28T00:00:00Z",
+  "AccountNumber": "ANON_b3f573d43869d1be",
+  "ClientName": "ANON_fbe727e1089b04a8",
+  "ClientINN": "ANON_0de7f500b0aaad49",
+  "CashBalance": "0.18",
+  "TotalAssets": "252369.71",
+  "Positions": [
+    {
+      "ISIN": "RU000A10CKT3",
+      "Name": "ОФЗ 26251, 26251RMFS,",
+      "Qty": "50",
+      "Price": "85.991",
+      "MarketValue": "45402.95",
+      "Currency": "RUR"
+    },
+    {
+      "ISIN": "RU000A101EJ5",
+      "Name": "EQMX ETF, 3965,",
+      "Qty": "370",
+      "Price": "145.2",
+      "MarketValue": "53724",
+      "Currency": "RUR"
+    },
+    {
+      "ISIN": "RU000A101NZ2",
+      "Name": "GOLD ETF, 4038,",
+      "Qty": "2000",
+      "Price": "3.21",
+      "MarketValue": "6420",
+      "Currency": "RUR"
+    },
+    {
+      "ISIN": "RU000A1014L8",
+      "Name": "LQDT ETF, 3915,",
+      "Qty": "37274",
+      "Price": "1.9338",
+      "MarketValue": "72080.46",
+      "Currency": "RUR"
+    },
+    {
+      "ISIN": "RU000A1002S8",
+      "Name": "OBLG ETF, 3647,",
+      "Qty": "382",
+      "Price": "195.66",
+      "MarketValue": "74742.12",
+      "Currency": "RUR"
+    }
+  ],
+  "CashFlow": [
+    {
+      "Date": "2026-02-23T00:00:00Z",
+      "Amount": "22000",
+      "Currency": "RUR",
+      "OperationType": "DEPOSIT",
+      "Comment": "ANON_787e3c1616616ed7"
+    },
+    {
+      "Date": "2026-02-24T00:00:00Z",
+      "Amount": "-6440.28",
+      "Currency": "RUR",
+      "OperationType": "SECURITY_PURCHASE",
+      "Comment": "ANON_b2ca3903f2e271c6"
+    },
+    {
+      "Date": "2026-02-25T00:00:00Z",
+      "Amount": "-15560.12",
+      "Currency": "RUR",
+      "OperationType": "SECURITY_PURCHASE",
+      "Comment": "ANON_b2ca3903f2e271c6"
+    }
+  ],
+  "SecuritiesFlow": [
+    {
+      "SecurityName": "OBLG ETF, 3647,",
+      "ISIN": "RU000A1002S8",
+      "Platform": "Фондовый рынок ПАО «Московская биржа»",
+      "Date": "2026-02-24T00:00:00Z",
+      "Qty": "33",
+      "OperationType": "Покупка",
+      "Comment": "ANON_70e9d9dd2f90c807"
+    },
+    {
+      "SecurityName": "LQDT ETF, 3915,",
+      "ISIN": "RU000A1014L8",
+      "Platform": "Фондовый рынок ПАО «Московская биржа»",
+      "Date": "2026-02-25T00:00:00Z",
+      "Qty": "8066",
+      "OperationType": "Покупка",
+      "Comment": "ANON_70e9d9dd2f90c807"
+    }
+  ],
+  "ReportDate": "2026-03-09T00:00:00Z"
+}

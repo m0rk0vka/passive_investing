@@ -1,0 +1,80 @@
+{
+  "PeriodStart": "2026-02-01T00:00:00Z",
+  "PeriodEnd": "2026-02-28T00:00:00Z",
+  "AccountNumber": "ANON_90d056833b779cf3",
+  "ClientName": "ANON_fbe727e1089b04a8",
+  "ClientINN": "ANON_0de7f500b0aaad49",
+  "CashBalance": "7.86",
+  "TotalAssets": "113366.35",
+  "Positions": [
+    {
+      "ISIN": "RU000A101EJ5",
+      "Name": "EQMX ETF, 3965,",
+      "Qty": "780",
+      "Price": "145.2",
+      "MarketValue": "113256",
+      "Currency": "RUR"
+    },
+    {
+      "ISIN": "RU000A1014L8",
+      "Name": "LQDT ETF, 3915,",
+      "Qty": "53",
+      "Price": "1.9338",
+      "MarketValue": "102.49",
+      "Currency": "RUR"
+    }
+  ],
+  "CashFlow": [
+    {
+      "Date": "2026-02-23T00:00:00Z",
+      "Amount": "56000",
+      "Currency": "RUR",
+      "OperationType": "DEPOSIT",
+      "Comment": "ANON_fe2156a8d53e5fb1"
+    },
+    {
+      "Date": "2026-02-24T00:00:00Z",
+      "Amount": "-43635",
+      "Currency": "RUR",
+      "OperationType": "SECURITY_PURCHASE",
+      "Comment": "ANON_b2ca3903f2e271c6"
+    },
+    {
+      "Date": "2026-02-25T00:00:00Z",
+      "Amount": "-12357.76",
+      "Currency": "RUR",
+      "OperationType": "SECURITY_PURCHASE",
+      "Comment": "ANON_b2ca3903f2e271c6"
+    }
+  ],
+  "SecuritiesFlow": [
+    {
+      "SecurityName": "EQMX ETF, 3965,",
+      "ISIN": "RU000A101EJ5",
+      "Platform": "Фондовый рынок ПАО «Московская биржа»",
+      "Date": "2026-02-24T00:00:00Z",
+      "Qty": "300",
+      "OperationType": "Покупка",
+      "Comment": "ANON_70e9d9dd2f90c807"
+    },
+    {
+      "SecurityName": "EQMX ETF, 3965,",
+      "ISIN": "RU000A101EJ5",
+      "Platform": "Фондовый рынок ПАО «Московская биржа»",
+      "Date": "2026-02-25T00:00:00Z",
+      "Qty": "85",
+      "OperationType": "Покупка",
+      "Comment": "ANON_70e9d9dd2f90c807"
+    },
+    {
+      "SecurityName": "LQDT ETF, 3915,",
+      "ISIN": "RU000A1014L8",
+      "Platform": "Фондовый рынок ПАО «Московская биржа»",
+      "Date": "2026-02-25T00:00:00Z",
+      "Qty": "28",
+      "OperationType": "Покупка",
+      "Comment": "ANON_70e9d9dd2f90c807"
+    }
+  ],
+  "ReportDate": "2026-03-09T00:00:00Z"
+}

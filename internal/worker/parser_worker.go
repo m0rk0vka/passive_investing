@@ -25,6 +25,7 @@ type ParserWorker struct {
 	uploadRepo   *repository.UploadRepository
 	snapshotRepo *repository.SnapshotRepository
 	accountRepo  *repository.AccountRepository
+	cashFlowRepo *repository.CashFlowRepository
 }
 
 // NewParserWorker creates a new parser worker
@@ -35,6 +36,7 @@ func NewParserWorker(db *sql.DB, logger *zap.Logger) *ParserWorker {
 		uploadRepo:   repository.NewUploadRepository(db),
 		snapshotRepo: repository.NewSnapshotRepository(db),
 		accountRepo:  repository.NewAccountRepository(db),
+		cashFlowRepo: repository.NewCashFlowRepository(db),
 	}
 }
 
@@ -121,6 +123,11 @@ func (w *ParserWorker) processUpload(ctx context.Context, upload *repository.Upl
 		return fmt.Errorf("save snapshots: %w", err)
 	}
 
+	// Save cash flow operations
+	if err := w.saveCashFlowOperations(ctx, accountID, data); err != nil {
+		return fmt.Errorf("save cash flow operations: %w", err)
+	}
+
 	// Mark as done
 	if err := w.uploadRepo.UpdateUploadStatus(ctx, upload.ID, repository.UploadStatusDone, nil); err != nil {
 		return fmt.Errorf("update status to done: %w", err)
@@ -203,4 +210,36 @@ func (w *ParserWorker) saveSnapshots(ctx context.Context, accountID int64, data 
 // formatPeriod formats time to YYYY-MM period string
 func formatPeriod(t time.Time) string {
 	return t.Format("2006-01")
+}
+
+// saveCashFlowOperations saves cash flow operations
+func (w *ParserWorker) saveCashFlowOperations(ctx context.Context, accountID int64, data *parsing.PortfolioData) error {
+	period := formatPeriod(data.PeriodEnd)
+
+	// Фильтруем и конвертируем операции
+	var operations []repository.CashFlowOperation
+	for _, op := range data.CashFlow {
+
+		operations = append(operations, repository.CashFlowOperation{
+			AccountID:     accountID,
+			Period:        period,
+			OperationDate: op.Date,
+			Amount:        op.Amount,
+			Currency:      op.Currency,
+			OperationType: convertCashFlowType(op.OperationType),
+			Comment:       op.Comment,
+		})
+	}
+
+	// Идемпотентное сохранение: удаляем старые и вставляем новые
+	if err := w.cashFlowRepo.ReplaceOperationsForPeriod(ctx, accountID, period, operations); err != nil {
+		return fmt.Errorf("replace cash flow operations: %w", err)
+	}
+
+	return nil
+}
+
+// convertCashFlowType конвертирует тип операции из parsing в repository
+func convertCashFlowType(t parsing.CashFlowOperationType) repository.CashFlowOperationType {
+	return repository.CashFlowOperationType(t)
 }

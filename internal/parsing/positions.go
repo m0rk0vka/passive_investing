@@ -48,7 +48,7 @@ type CashFlowOperation struct {
 	Date          time.Time
 	Amount        decimal.Decimal
 	Currency      string
-	OperationType string
+	OperationType CashFlowOperationType
 	Comment       string
 }
 
@@ -345,7 +345,7 @@ func extractCashFlow(rows [][]string, data *PortfolioData) {
 
 				// Валюта и тип операции могут быть в разных позициях
 				currency := ""
-				operationType := ""
+				var operationType CashFlowOperationType
 				comment := ""
 
 				// Ищем валюту (обычно RUR)
@@ -356,13 +356,32 @@ func extractCashFlow(rows [][]string, data *PortfolioData) {
 					}
 				}
 
-				// Ищем тип операции
+				// Ищем тип операции (пропускаем валюту и числа)
+				rawOperationType := ""
 				for j := 3; j < len(row); j++ {
-					if row[j] != "" && !strings.Contains(row[j], "Перечисление") {
-						operationType = row[j]
-						break
+					cell := strings.TrimSpace(row[j])
+					if cell == "" {
+						continue
 					}
+					// Пропускаем валюту
+					if strings.ToUpper(cell) == "RUR" || strings.ToUpper(cell) == "RUB" {
+						continue
+					}
+					// Пропускаем числа
+					if _, err := parseDec(cell); err == nil {
+						continue
+					}
+					// Пропускаем "Перечисление"
+					if strings.Contains(cell, "Перечисление") {
+						continue
+					}
+					// Это тип операции
+					rawOperationType = cell
+					break
 				}
+
+				// Преобразуем текст из отчета в наш тип
+				operationType = MapCashFlowOperationType(rawOperationType)
 
 				// Комментарий - последний непустой элемент
 				for j := len(row) - 1; j >= 0; j-- {

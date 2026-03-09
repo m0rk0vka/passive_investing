@@ -1,0 +1,22 @@
+{
+  "PeriodStart": "2026-01-22T00:00:00Z",
+  "PeriodEnd": "2026-01-22T00:00:00Z",
+  "AccountNumber": "ANON_90d056833b779cf3",
+  "ClientName": "ANON_fbe727e1089b04a8",
+  "ClientINN": "ANON_0de7f500b0aaad49",
+  "CashBalance": "48.25",
+  "TotalAssets": "56790",
+  "Positions": [
+    {
+      "ISIN": "RU000A101EJ5",
+      "Name": "EQMX ETF, 3965,",
+      "Qty": "395",
+      "Price": "143.65",
+      "MarketValue": "56741.75",
+      "Currency": "RUR"
+    }
+  ],
+  "CashFlow": [],
+  "SecuritiesFlow": [],
+  "ReportDate": "2026-01-24T00:00:00Z"
+}

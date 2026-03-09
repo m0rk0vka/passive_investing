@@ -59,6 +59,7 @@ create table if not exists upload (
 create index if not exists upload_status_created_idx
   on upload(status, created_at);
 
+drop trigger if exists upload_set_updated_at on upload;
 create trigger upload_set_updated_at
 before update on upload
 for each row execute function set_updated_at();
@@ -120,8 +121,66 @@ create table if not exists import_batch (
   updated_at   timestamptz not null default now()
 );
 
+drop trigger if exists import_batch_set_updated_at on import_batch;
 create trigger import_batch_set_updated_at
 before update on import_batch
+for each row execute function set_updated_at();
+
+-- --- Snapshots: monthly portfolio state
+
+-- valuation_snapshot: общая сумма портфеля за месяц
+create table if not exists valuation_snapshot (
+  id              bigserial primary key,
+  account_id      bigint not null references account(id),
+  period          text not null,  -- "2025-10" format (YYYY-MM)
+  
+  total_value     numeric(20,2) not null,
+  cash_balance    numeric(20,2) not null default 0,
+  securities_value numeric(20,2) not null default 0,
+  
+  currency        text not null default 'RUB',
+  
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  
+  unique(account_id, period)
+);
+
+create index if not exists valuation_snapshot_account_period_idx
+  on valuation_snapshot(account_id, period desc);
+
+drop trigger if exists valuation_snapshot_set_updated_at on valuation_snapshot;
+create trigger valuation_snapshot_set_updated_at
+before update on valuation_snapshot
+for each row execute function set_updated_at();
+
+-- position_snapshot: состав портфеля за месяц
+create table if not exists position_snapshot (
+  id              bigserial primary key,
+  account_id      bigint not null references account(id),
+  period          text not null,  -- "2025-10" format (YYYY-MM)
+  
+  isin            text not null,
+  security_name   text not null,
+  
+  quantity        numeric(20,6) not null,
+  price           numeric(20,2) not null,
+  market_value    numeric(20,2) not null,
+  
+  currency        text not null default 'RUB',
+  
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  
+  unique(account_id, period, isin)
+);
+
+create index if not exists position_snapshot_account_period_idx
+  on position_snapshot(account_id, period desc);
+
+drop trigger if exists position_snapshot_set_updated_at on position_snapshot;
+create trigger position_snapshot_set_updated_at
+before update on position_snapshot
 for each row execute function set_updated_at();
 
 commit;

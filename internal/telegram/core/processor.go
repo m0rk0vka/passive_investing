@@ -2,10 +2,13 @@ package core
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"strings"
 
+	"github.com/m0rk0vka/passive_investing/internal/services"
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/callbackqueryanswerer"
@@ -31,20 +34,23 @@ type updatesProcessor struct {
 	token   string
 	dataDir string
 	logger  *zap.Logger
+	db      *sql.DB
 
 	messageSender         messagesender.MessageSender
 	fileDownloader        filedownloader.FileDownloader
 	callbackQueryAnswerer callbackqueryanswerer.CallbackQueryAnswerer
 
-	visualizer ui.TelegramBotVisualizer
+	visualizer    ui.TelegramBotVisualizer
+	uploadService *services.UploadService
 }
 
-func NewUpdatesProcessor(ctx context.Context, client *http.Client, token string, dataDir string, logger *zap.Logger) (poller.UpdatesProcessor, error) {
+func NewUpdatesProcessor(ctx context.Context, client *http.Client, token string, dataDir string, db *sql.DB, logger *zap.Logger) (poller.UpdatesProcessor, error) {
 	u := &updatesProcessor{
 		ctx:     ctx,
 		client:  client,
 		token:   token,
 		dataDir: dataDir,
+		db:      db,
 		logger:  logger,
 	}
 	if err := u.init(); err != nil {
@@ -60,8 +66,9 @@ func (u *updatesProcessor) init() error {
 	}
 	u.fileDownloader = fileDownloader
 	u.messageSender = messagesender.NewMessageSender(u.client, u.token)
-	u.visualizer = ui.NewTelegramBotVisualizer(u.ctx, u.client, u.token, u.logger)
+	u.visualizer = ui.NewTelegramBotVisualizer(u.ctx, u.client, u.token, u.db, u.logger)
 	u.callbackQueryAnswerer = callbackqueryanswerer.NewCallbackQueryAnswerer(u.client, u.token)
+	u.uploadService = services.NewUploadService(u.db, u.logger)
 	return nil
 }
 
@@ -125,13 +132,38 @@ func (u *updatesProcessor) processUpdate(update entities.Update) (offset int) {
 			return
 		}
 
+		// Save upload to database first
+		messageID := int64(update.Message.MessageID)
+		uploadID, err := u.uploadService.SaveUpload(
+			u.ctx,
+			update.Message.From.ID,
+			update.Message.Chat.ID,
+			&messageID,
+			&doc.FileID,
+			nil, // FileUniqueID not available in Document struct
+			&doc.FileName,
+			&doc.MimeType,
+			&doc.FileSize,
+		)
+		if err != nil {
+			u.logger.Error("failed to save upload", zap.Error(err))
+			_, _ = u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, "Ошибка сохранения в БД: "+err.Error()))
+			return
+		}
+
+		// Download file
 		sha, err := u.fileDownloader.DownloadFile(doc.FileID)
 		if err != nil {
-			_, err := u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, msgFileDownloadFail+err.Error()))
-			if err != nil {
-				u.logger.Error("failed to send message", zap.Error(err))
-				return
-			}
+			u.logger.Error("failed to download file", zap.Error(err))
+			_, _ = u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, msgFileDownloadFail+err.Error()))
+			return
+		}
+
+		// Save raw file metadata
+		storageKey := filepath.Join(u.dataDir, sha+".xlsx")
+		if err := u.uploadService.SaveRawFile(u.ctx, uploadID, sha, "local", storageKey); err != nil {
+			u.logger.Error("failed to save raw file", zap.Error(err))
+			_, _ = u.messageSender.SendMessage(messagesender.NewSimpleMessage(update.Message.Chat.ID, "Ошибка сохранения метаданных файла: "+err.Error()))
 			return
 		}
 

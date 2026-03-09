@@ -2,11 +2,12 @@ package ui
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 
+	"github.com/m0rk0vka/passive_investing/internal/repository"
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/entities"
-	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/mocks"
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/renderers"
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/repos"
 	domainEntities "github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
@@ -44,7 +45,9 @@ type telegramBotVisualizer struct {
 	repo repos.PortfolioRepo
 }
 
-func NewTelegramBotVisualizer(ctx context.Context, client *http.Client, token string, logger *zap.Logger) TelegramBotVisualizer {
+func NewTelegramBotVisualizer(ctx context.Context, client *http.Client, token string, db *sql.DB, logger *zap.Logger) TelegramBotVisualizer {
+	portfolioRepo := repository.NewPortfolioRepoAdapter(db)
+
 	return &telegramBotVisualizer{
 		ctx:    ctx,
 		logger: logger,
@@ -54,13 +57,13 @@ func NewTelegramBotVisualizer(ctx context.Context, client *http.Client, token st
 
 		sessionStore: NewSessionStore(),
 
-		renderer: NewRenderer(renderers.Renderers),
+		renderer: NewRenderer(renderers.NewRenderers(portfolioRepo)),
 
 		messageSender:  messagesender.NewMessageSender(client, token),
 		messageDeleter: messagedeleter.NewMessageDeleter(client, token),
 		messageEditor:  messageeditor.NewMessageEditor(client, token),
 
-		repo: &mocks.MockPortfolioRepo{},
+		repo: portfolioRepo,
 	}
 }
 
@@ -175,18 +178,18 @@ func (t *telegramBotVisualizer) processCallbackQuery(session Session, callbackQu
 			Period:      prevPeriod,
 		})
 	default:
-		portfolioId, ok := entities.IsOpenPortfolio(callbackQuery.Data)
+		portfolioID, ok := entities.IsOpenPortfolio(callbackQuery.Data)
 		if !ok {
 			return fmt.Errorf("unknown callback query: %s", callbackQuery.Data)
 		}
-		lastPeriod, err := t.repo.GetLastPeriod(t.ctx, session.ChatID(), session.State.PortfolioID)
+		lastPeriod, err := t.repo.GetLastPeriod(t.ctx, session.ChatID(), portfolioID)
 		if err != nil {
 			return fmt.Errorf("failed to get last period: %w", err)
 		}
 		session.PushCurrentState()
 		session.SetState(entities.UIState{
 			Screen:      entities.ScreenPortfolioSum,
-			PortfolioID: portfolioId,
+			PortfolioID: portfolioID,
 			Period:      lastPeriod,
 		})
 	}

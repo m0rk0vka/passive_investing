@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
 	"time"
 
@@ -13,13 +14,15 @@ import (
 type TelegramBot struct {
 	ctx    context.Context
 	logger *zap.Logger
+	db     *sql.DB
 
 	poller poller.TelegramBotPoller
 }
 
-func NewTelegramBot(ctx context.Context, logger *zap.Logger) (*TelegramBot, error) {
+func NewTelegramBot(ctx context.Context, db *sql.DB, logger *zap.Logger) (*TelegramBot, error) {
 	tb := &TelegramBot{
 		ctx:    ctx,
+		db:     db,
 		logger: logger,
 	}
 	if err := tb.init(); err != nil {
@@ -33,7 +36,7 @@ func (t *TelegramBot) init() error {
 	token := environment.MustEnv("BOT_TOKEN")
 	dataDir := environment.MustEnv("RAW_DATA_DIR")
 
-	updatesProcessor, err := NewUpdatesProcessor(t.ctx, client, token, dataDir, t.logger)
+	updatesProcessor, err := NewUpdatesProcessor(t.ctx, client, token, dataDir, t.db, t.logger)
 	if err != nil {
 		return err
 	}

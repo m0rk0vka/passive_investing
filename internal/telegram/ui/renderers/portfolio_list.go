@@ -6,16 +6,27 @@ import (
 	"strings"
 
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/entities"
-	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/repos"
 	domainEntities "github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
 )
 
+// portfolioListService определяет контракт для получения списка портфелей
+type portfolioListService interface {
+	ListPortfolios(ctx context.Context, userID int64) ([]entities.Portfolio, error)
+}
+
 type PortfolioListRenderer struct {
-	Repo repos.PortfolioRepo
+	listService portfolioListService
+}
+
+// NewPortfolioListRenderer creates a new portfolio list renderer
+func NewPortfolioListRenderer(listService portfolioListService) *PortfolioListRenderer {
+	return &PortfolioListRenderer{
+		listService: listService,
+	}
 }
 
 func (r *PortfolioListRenderer) Render(ctx context.Context, userID int64, st entities.UIState) (entities.Rendered, error) {
-	ps, err := r.Repo.ListPortfolios(ctx, userID)
+	ps, err := r.listService.ListPortfolios(ctx, userID)
 	if err != nil {
 		return entities.Rendered{}, fmt.Errorf("failed to list portfolios: %w", err)
 	}

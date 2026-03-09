@@ -4,26 +4,24 @@ import (
 	"context"
 
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/entities"
-	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/repos"
 )
 
 type Renderer interface {
 	Render(ctx context.Context, userID int64, st entities.UIState) (entities.Rendered, error)
 }
 
-// NewRenderers creates a map of renderers with the given repository
-func NewRenderers(repo repos.PortfolioRepo) map[entities.Screen]Renderer {
+// NewRenderers creates a map of renderers with the given services
+func NewRenderers(
+	listService portfolioListService,
+	summaryService portfolioSummaryService,
+	periodsService portfolioPeriodsService,
+	positionsService portfolioPositionsService,
+) map[entities.Screen]Renderer {
 	return map[entities.Screen]Renderer{
-		entities.ScreenHome: &HomeRenderer{},
-		entities.ScreenPortfolioList: &PortfolioListRenderer{
-			Repo: repo,
-		},
-		entities.ScreenPortfolioSum: &PortfolioSumRenderer{
-			Repo: repo,
-		},
-		entities.ScreenPortfolioPositions: &PortfolioPositionsRenderer{
-			Repo: repo,
-		},
+		entities.ScreenHome:               &HomeRenderer{},
+		entities.ScreenPortfolioList:      NewPortfolioListRenderer(listService),
+		entities.ScreenPortfolioSum:       NewPortfolioSumRenderer(summaryService),
+		entities.ScreenPortfolioPositions: NewPortfolioPositionsRenderer(periodsService, positionsService),
 	}
 }
 

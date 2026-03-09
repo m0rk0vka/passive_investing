@@ -7,9 +7,10 @@ import (
 	"net/http"
 
 	"github.com/m0rk0vka/passive_investing/internal/repository"
+	"github.com/m0rk0vka/passive_investing/internal/services"
+	"github.com/m0rk0vka/passive_investing/internal/services/domain"
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/entities"
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/renderers"
-	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/repos"
 	domainEntities "github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/messagedeleter"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/messageeditor"
@@ -42,11 +43,25 @@ type telegramBotVisualizer struct {
 	messageEditor  messageeditor.MessageEditor
 	messageDeleter messagedeleter.MessageDeleter
 
-	repo repos.PortfolioRepo
+	periodsService *services.PortfolioPeriodsService
 }
 
 func NewTelegramBotVisualizer(ctx context.Context, client *http.Client, token string, db *sql.DB, logger *zap.Logger) TelegramBotVisualizer {
-	portfolioRepo := repository.NewPortfolioRepoAdapter(db)
+	// Initialize repositories
+	snapshotRepo := repository.NewSnapshotRepository(db)
+	accountRepo := repository.NewAccountRepository(db)
+	virtualPortfolioRepo := repository.NewVirtualPortfolioRepository(db)
+
+	// Initialize domain services
+	idResolver := domain.NewPortfolioIDResolver(virtualPortfolioRepo)
+	snapshotAggregator := domain.NewSnapshotAggregator(snapshotRepo)
+	percentageCalculator := domain.NewPercentageCalculator()
+
+	// Initialize application services
+	listService := services.NewPortfolioListService(accountRepo, virtualPortfolioRepo)
+	periodsService := services.NewPortfolioPeriodsService(snapshotRepo, idResolver, snapshotAggregator)
+	summaryService := services.NewPortfolioSummaryService(idResolver, snapshotAggregator)
+	positionsService := services.NewPortfolioPositionsService(idResolver, snapshotAggregator, percentageCalculator)
 
 	return &telegramBotVisualizer{
 		ctx:    ctx,
@@ -57,13 +72,13 @@ func NewTelegramBotVisualizer(ctx context.Context, client *http.Client, token st
 
 		sessionStore: NewSessionStore(),
 
-		renderer: NewRenderer(renderers.NewRenderers(portfolioRepo)),
+		renderer: NewRenderer(renderers.NewRenderers(listService, summaryService, periodsService, positionsService)),
 
 		messageSender:  messagesender.NewMessageSender(client, token),
 		messageDeleter: messagedeleter.NewMessageDeleter(client, token),
 		messageEditor:  messageeditor.NewMessageEditor(client, token),
 
-		repo: portfolioRepo,
+		periodsService: periodsService,
 	}
 }
 
@@ -158,7 +173,7 @@ func (t *telegramBotVisualizer) processCallbackQuery(session Session, callbackQu
 			Period:      session.State.Period,
 		})
 	case entities.CBPeriodNext:
-		nextPeriod, err := t.repo.GetNextPeriod(t.ctx, session.ChatID(), session.State.PortfolioID, session.State.Period)
+		nextPeriod, err := t.periodsService.GetNextPeriod(t.ctx, session.ChatID(), session.State.PortfolioID, session.State.Period)
 		if err != nil {
 			return fmt.Errorf("failed to get next period: %w", err)
 		}
@@ -168,7 +183,7 @@ func (t *telegramBotVisualizer) processCallbackQuery(session Session, callbackQu
 			Period:      nextPeriod,
 		})
 	case entities.CBPeriodPrev:
-		prevPeriod, err := t.repo.GetPrevPeriod(t.ctx, session.ChatID(), session.State.PortfolioID, session.State.Period)
+		prevPeriod, err := t.periodsService.GetPrevPeriod(t.ctx, session.ChatID(), session.State.PortfolioID, session.State.Period)
 		if err != nil {
 			return fmt.Errorf("failed to get prev period: %w", err)
 		}
@@ -182,7 +197,7 @@ func (t *telegramBotVisualizer) processCallbackQuery(session Session, callbackQu
 		if !ok {
 			return fmt.Errorf("unknown callback query: %s", callbackQuery.Data)
 		}
-		lastPeriod, err := t.repo.GetLastPeriod(t.ctx, session.ChatID(), portfolioID)
+		lastPeriod, err := t.periodsService.GetLastPeriod(t.ctx, session.ChatID(), portfolioID)
 		if err != nil {
 			return fmt.Errorf("failed to get last period: %w", err)
 		}

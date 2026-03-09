@@ -8,16 +8,37 @@ import (
 	"text/tabwriter"
 
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/entities"
-	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/repos"
 	domainEntities "github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
 )
 
+// portfolioPeriodsService определяет контракт для работы с периодами
+type portfolioPeriodsService interface {
+	ListPeriods(ctx context.Context, userID int64, portfolioID string) ([]string, error)
+}
+
+// portfolioPositionsService определяет контракт для получения позиций
+type portfolioPositionsService interface {
+	ListPositions(ctx context.Context, userID int64, portfolioID string, period string) ([]entities.Position, error)
+}
+
 type PortfolioPositionsRenderer struct {
-	Repo repos.PortfolioRepo
+	periodsService   portfolioPeriodsService
+	positionsService portfolioPositionsService
+}
+
+// NewPortfolioPositionsRenderer creates a new portfolio positions renderer
+func NewPortfolioPositionsRenderer(
+	periodsService portfolioPeriodsService,
+	positionsService portfolioPositionsService,
+) *PortfolioPositionsRenderer {
+	return &PortfolioPositionsRenderer{
+		periodsService:   periodsService,
+		positionsService: positionsService,
+	}
 }
 
 func (r *PortfolioPositionsRenderer) Render(ctx context.Context, userID int64, st entities.UIState) (entities.Rendered, error) {
-	periods, err := r.Repo.ListPeriods(ctx, userID, st.PortfolioID)
+	periods, err := r.periodsService.ListPeriods(ctx, userID, st.PortfolioID)
 	if err != nil {
 		return entities.Rendered{}, fmt.Errorf("failed to get periods: %w", err)
 	}
@@ -26,7 +47,7 @@ func (r *PortfolioPositionsRenderer) Render(ctx context.Context, userID int64, s
 		return entities.Rendered{}, fmt.Errorf("portfolio is empty")
 	}
 
-	positions, err := r.Repo.ListPositions(ctx, userID, st.PortfolioID, st.Period)
+	positions, err := r.positionsService.ListPositions(ctx, userID, st.PortfolioID, st.Period)
 	if err != nil {
 		return entities.Rendered{}, fmt.Errorf("failed to get summary: %w", err)
 	}

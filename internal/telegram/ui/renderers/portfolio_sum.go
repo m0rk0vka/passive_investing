@@ -5,16 +5,27 @@ import (
 	"fmt"
 
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/entities"
-	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/repos"
 	domainEntities "github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
 )
 
+// portfolioSummaryService определяет контракт для получения summary портфеля
+type portfolioSummaryService interface {
+	GetSummary(ctx context.Context, userID int64, portfolioID string, period string) (entities.PortfolioSummary, error)
+}
+
 type PortfolioSumRenderer struct {
-	Repo repos.PortfolioRepo
+	summaryService portfolioSummaryService
+}
+
+// NewPortfolioSumRenderer creates a new portfolio sum renderer
+func NewPortfolioSumRenderer(summaryService portfolioSummaryService) *PortfolioSumRenderer {
+	return &PortfolioSumRenderer{
+		summaryService: summaryService,
+	}
 }
 
 func (r *PortfolioSumRenderer) Render(ctx context.Context, userID int64, st entities.UIState) (entities.Rendered, error) {
-	summary, err := r.Repo.GetSummary(ctx, userID, st.PortfolioID, st.Period)
+	summary, err := r.summaryService.GetSummary(ctx, userID, st.PortfolioID, st.Period)
 	if err != nil {
 		return entities.Rendered{}, fmt.Errorf("failed to get summary: %w", err)
 	}

@@ -19,10 +19,11 @@ type Portfolio struct {
 }
 
 type Position struct {
-	ISIN  string
-	Name  string
-	Qty   string
-	Value Money
+	ISIN    string
+	Name    string
+	Qty     string
+	Value   Money
+	Percent string // процент от общей суммы портфеля, например "15.5"
 }
 
 type PortfolioSummary struct {

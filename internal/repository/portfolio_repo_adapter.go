@@ -174,8 +174,21 @@ func (a *PortfolioRepoAdapter) ListPositions(ctx context.Context, userID int64, 
 		return nil, err
 	}
 
+	// Рассчитываем общую сумму всех позиций
+	totalValue := decimal.Zero
+	for _, snap := range snapshots {
+		totalValue = totalValue.Add(snap.MarketValue)
+	}
+
 	positions := make([]entities.Position, 0, len(snapshots))
 	for _, snap := range snapshots {
+		// Рассчитываем процент от общей суммы
+		percent := "0.0"
+		if !totalValue.IsZero() {
+			pct := snap.MarketValue.Div(totalValue).Mul(decimal.NewFromInt(100))
+			percent = pct.StringFixed(1)
+		}
+
 		positions = append(positions, entities.Position{
 			ISIN: snap.ISIN,
 			Name: snap.SecurityName,
@@ -184,6 +197,7 @@ func (a *PortfolioRepoAdapter) ListPositions(ctx context.Context, userID int64, 
 				Amount:   snap.MarketValue.String(),
 				Currency: snap.Currency,
 			},
+			Percent: percent,
 		})
 	}
 

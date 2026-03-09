@@ -62,9 +62,9 @@ func formatPostions(positions []entities.Position) string {
 	var buf bytes.Buffer
 	w := tabwriter.NewWriter(&buf, 0, 0, 2, ' ', 0)
 
-	fmt.Fprintln(w, "Name\tQty\tValue")
+	fmt.Fprintln(w, "Name\tQty\tValue\t%")
 	for _, p := range positions {
-		fmt.Fprintf(w, "%s\t%s\t%s\n", p.Name, p.Qty, p.Value)
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s%%\n", p.Name, p.Qty, p.Value, p.Percent)
 	}
 	w.Flush()
 	return buf.String()

@@ -5,13 +5,13 @@ begin;
 
 -- Virtual Portfolio: aggregates multiple accounts into one view
 create table if not exists virtual_portfolio (
-  id         bigint not null,
+  id         bigserial primary key,
   user_id    bigint not null references tg_user(id),
   name       text not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   
-  primary key (id, user_id)
+  unique(user_id, name)
 );
 
 create index if not exists virtual_portfolio_user_id_idx on virtual_portfolio(user_id);
@@ -23,13 +23,10 @@ for each row execute function set_updated_at();
 
 -- Virtual Portfolio Items: which accounts are included in virtual portfolio
 create table if not exists virtual_portfolio_item (
-  id                   bigint not null,
-  virtual_portfolio_id bigint not null,
+  id                   bigserial primary key,
+  virtual_portfolio_id bigint not null references virtual_portfolio(id) on delete cascade,
   account_id           bigint not null references account(id) on delete cascade,
   created_at           timestamptz not null default now(),
-  
-  primary key (id, virtual_portfolio_id),
-  foreign key (virtual_portfolio_id, id) references virtual_portfolio(id, user_id) on delete cascade,
   
   unique(virtual_portfolio_id, account_id)
 );

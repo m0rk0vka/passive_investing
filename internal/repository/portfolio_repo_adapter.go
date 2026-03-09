@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/entities"
 	"github.com/shopspring/decimal"
@@ -191,9 +193,13 @@ func (a *PortfolioRepoAdapter) ListPositions(ctx context.Context, userID int64, 
 // getAccountIDsForPortfolio returns account IDs for a portfolio (real or virtual)
 func (a *PortfolioRepoAdapter) getAccountIDsForPortfolio(ctx context.Context, portfolioID string) ([]int64, error) {
 	// Parse portfolio ID format: "real_123" or "virtual_456"
-	var kind string
-	var id int64
-	_, err := fmt.Sscanf(portfolioID, "%s_%d", &kind, &id)
+	parts := strings.Split(portfolioID, "_")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid portfolio ID format: %s", portfolioID)
+	}
+
+	kind := parts[0]
+	id, err := strconv.ParseInt(parts[1], 10, 64)
 	if err != nil {
 		return nil, fmt.Errorf("invalid portfolio ID format: %s", portfolioID)
 	}

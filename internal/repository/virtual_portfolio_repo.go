@@ -77,13 +77,12 @@ func (r *VirtualPortfolioRepository) GetVirtualPortfolio(ctx context.Context, id
 }
 
 // ListVirtualPortfolios returns all virtual portfolios for a user
-func (r *VirtualPortfolioRepository) ListVirtualPortfolios(ctx context.Context, userID int64) ([]VirtualPortfolio, error) {
+func (r *VirtualPortfolioRepository) ListVirtualPortfolios(ctx context.Context, _ int64) ([]VirtualPortfolio, error) {
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, user_id, name, created_at, updated_at
 		FROM virtual_portfolio
-		WHERE user_id = $1
 		ORDER BY created_at DESC
-	`, userID)
+	`)
 	if err != nil {
 		return nil, err
 	}

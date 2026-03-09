@@ -8,6 +8,10 @@ type Money struct {
 	Currency string // "RUB"
 }
 
+func (m Money) String() string {
+	return m.Amount + " " + m.Currency
+}
+
 type Portfolio struct {
 	ID   string
 	Name string

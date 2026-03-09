@@ -33,7 +33,7 @@ func (r *PortfolioSumRenderer) Render(ctx context.Context, userID int64, st enti
 	))
 
 	return entities.Rendered{
-		Text: fmt.Sprintf("Сумма портфеля за период %s: %.2f", summary.Period, summary.Total),
+		Text: fmt.Sprintf("Сумма портфеля за период %s: %s", summary.Period, summary.Total.String()),
 		Kb:   domainEntities.NewInlineKeyboardMarkup(rows...),
 	}, nil
 }

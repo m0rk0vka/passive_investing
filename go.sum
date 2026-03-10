@@ -1,3 +1,5 @@
+github.com/ChizhovVadim/xirr v0.0.0-20240813085045-33e4a07db0c9 h1:6Cjj2/lPRkR1ML+qsEYQYHjuDeZ/mw44swhA8sh0pnA=
+github.com/ChizhovVadim/xirr v0.0.0-20240813085045-33e4a07db0c9/go.mod h1:Dl0daSFplEFuMXr/TCEG8pzeY052N9fMDyvyV2s2Kck=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/lib/pq v1.11.2 h1:x6gxUeu39V0BHZiugWe8LXZYZ+Utk7hSJGThs8sdzfs=

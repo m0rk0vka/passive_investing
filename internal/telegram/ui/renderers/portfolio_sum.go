@@ -44,6 +44,7 @@ func (r *PortfolioSumRenderer) Render(ctx context.Context, userID int64, st enti
 	text += fmt.Sprintf("📈 Заработано: %s\n", summary.Earnings.String())
 	text += fmt.Sprintf("   └ %s%% от общей суммы\n", summary.EarningsPct)
 	text += fmt.Sprintf("   └ %s%% доходность\n", summary.ReturnPct)
+	text += fmt.Sprintf("   └ %s%% annual rate\n", summary.AnnualRate)
 
 	var rows [][]domainEntities.InlineKeyboardButton
 

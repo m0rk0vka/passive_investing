@@ -20,6 +20,10 @@ type (
 	depositsInfoProvider interface {
 		GetDepositsInfo(ctx context.Context, accountIDs []int64, upToPeriod string) (*repository.DepositsInfo, error)
 	}
+
+	profitProvider interface {
+		CalculateProfit(ctx context.Context, accountIDs []int64, period string) (string, error)
+	}
 )
 
 // PortfolioSummaryService handles portfolio summary operations
@@ -27,6 +31,7 @@ type PortfolioSummaryService struct {
 	idResolver       portfolioIDResolver
 	aggregator       valuationAggregator
 	depositsProvider depositsInfoProvider
+	profitCalculator profitProvider
 }
 
 // NewPortfolioSummaryService creates a new portfolio summary service
@@ -34,11 +39,13 @@ func NewPortfolioSummaryService(
 	idResolver portfolioIDResolver,
 	aggregator valuationAggregator,
 	depositsProvider depositsInfoProvider,
+	profitCalculator profitProvider,
 ) *PortfolioSummaryService {
 	return &PortfolioSummaryService{
 		idResolver:       idResolver,
 		aggregator:       aggregator,
 		depositsProvider: depositsProvider,
+		profitCalculator: profitCalculator,
 	}
 }
 
@@ -64,12 +71,13 @@ func (s *PortfolioSummaryService) GetSummary(ctx context.Context, userID int64, 
 	earnings := snap.TotalValue.Sub(depositsInfo.TotalAmount)
 
 	// Рассчитываем проценты
-	var depositsPct, earningsPct, returnPct string
+	var depositsPct, earningsPct, returnPct, annualRate string
 
 	if snap.TotalValue.IsZero() {
 		depositsPct = "0.00"
 		earningsPct = "0.00"
 		returnPct = "0.00"
+		annualRate = "0.00"
 	} else {
 		// Процент пополнений от общей суммы
 		depositsPct = depositsInfo.TotalAmount.Div(snap.TotalValue).Mul(decimal.NewFromInt(100)).StringFixed(2)
@@ -82,6 +90,11 @@ func (s *PortfolioSummaryService) GetSummary(ctx context.Context, userID int64, 
 			returnPct = "0.00"
 		} else {
 			returnPct = earnings.Div(depositsInfo.TotalAmount).Mul(decimal.NewFromInt(100)).StringFixed(2)
+		}
+
+		annualRate, err = s.profitCalculator.CalculateProfit(ctx, accountIDs, period)
+		if err != nil {
+			return entities.PortfolioSummary{}, fmt.Errorf("failed to calculate annualRate: %w", err)
 		}
 	}
 
@@ -103,6 +116,7 @@ func (s *PortfolioSummaryService) GetSummary(ctx context.Context, userID int64, 
 		DepositsPct: depositsPct,
 		EarningsPct: earningsPct,
 		ReturnPct:   returnPct,
+		AnnualRate:  annualRate,
 		UpdatedAt:   snap.UpdatedAt,
 	}, nil
 }

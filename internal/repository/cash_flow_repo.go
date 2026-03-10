@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/shopspring/decimal"
 )
@@ -114,4 +116,45 @@ func (r *CashFlowRepository) GetDepositsInfo(ctx context.Context, accountIDs []i
 	}
 
 	return &info, nil
+}
+
+// GetDepositsInfo returns aggregated information about deposits for given accounts up to and including the specified period
+// Period format: "2025-10" (YYYY-MM)
+func (r *CashFlowRepository) GetDepositsInfos(
+	ctx context.Context, accountIDs []int64, upToPeriod string) ([]DepositsInfo, error) {
+	if len(accountIDs) == 0 {
+		return []DepositsInfo{}, nil
+	}
+
+	query := `
+		SELECT amount, currency, operation_date
+		FROM cash_flow_operation
+		WHERE account_id = ANY($1)
+		  AND operation_type = 'DEPOSIT'
+		  AND period <= $2
+		ORDER BY operation_date
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, accountIDs, upToPeriod)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return []DepositsInfo{}, nil
+		}
+
+		return nil, fmt.Errorf("failed to query deposit info: %w", err)
+	}
+	defer rows.Close()
+
+	var infos []DepositsInfo
+
+	for rows.Next() {
+		var info DepositsInfo
+		err := rows.Scan(&info.TotalAmount, &info.Currency, &info.OperationDate)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan deposit info: %w", err)
+		}
+		infos = append(infos, info)
+	}
+
+	return infos, nil
 }

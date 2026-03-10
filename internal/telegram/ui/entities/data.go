@@ -35,5 +35,6 @@ type PortfolioSummary struct {
 	DepositsPct string // Процент пополнений от общей суммы
 	EarningsPct string // Процент заработка от общей суммы
 	ReturnPct   string // Процент доходности (Earnings / Deposits * 100)
+	AnnualRate  string
 	UpdatedAt   time.Time
 }

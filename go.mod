@@ -3,6 +3,7 @@ module github.com/m0rk0vka/passive_investing
 go 1.25.5
 
 require (
+	github.com/ChizhovVadim/xirr v0.0.0-20240813085045-33e4a07db0c9
 	github.com/lib/pq v1.11.2
 	github.com/shopspring/decimal v1.4.0
 	github.com/stretchr/testify v1.11.1

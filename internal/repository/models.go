@@ -147,3 +147,15 @@ type DepositsInfo struct {
 	Currency      string
 	OperationDate time.Time
 }
+
+// BuyingRule defines a target allocation for one security within a portfolio
+type BuyingRule struct {
+	ID           int64
+	PortfolioID  string
+	ISIN         string
+	Ticker       string
+	SecurityName string
+	TargetPct    decimal.Decimal
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}

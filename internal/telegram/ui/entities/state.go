@@ -12,12 +12,16 @@ const (
 	ScreenPortfolioList      Screen = "PORTFOLIO_LIST"
 	ScreenPortfolioSum       Screen = "PORTFOLIO_SUMMARY"
 	ScreenPortfolioPositions Screen = "POSITIONS"
+	ScreenBuyingRules        Screen = "BUYING_RULES"
+	ScreenBuyingResult       Screen = "BUYING_RESULT"
+	ScreenCashflows          Screen = "CASHFLOWS"
 )
 
 type UIState struct {
 	Screen      Screen
 	PortfolioID string
 	Period      string
+	TopUpAmount string // selected replenishment amount, e.g. "12000"
 }
 
 type Rendered struct {

@@ -16,12 +16,18 @@ func NewRenderers(
 	summaryService portfolioSummaryService,
 	periodsService portfolioPeriodsService,
 	positionsService portfolioPositionsService,
+	buyingRulesSvc buyingRulesService,
+	buyingCalculatorSvc buyingCalculatorService,
+	cashflowSvc cashflowHistoryService,
 ) map[entities.Screen]Renderer {
 	return map[entities.Screen]Renderer{
 		entities.ScreenHome:               &HomeRenderer{},
 		entities.ScreenPortfolioList:      NewPortfolioListRenderer(listService),
 		entities.ScreenPortfolioSum:       NewPortfolioSumRenderer(summaryService),
 		entities.ScreenPortfolioPositions: NewPortfolioPositionsRenderer(periodsService, positionsService),
+		entities.ScreenBuyingRules:        NewBuyingRulesRenderer(buyingRulesSvc),
+		entities.ScreenBuyingResult:       NewBuyingResultRenderer(buyingCalculatorSvc),
+		entities.ScreenCashflows:          NewCashflowsRenderer(cashflowSvc),
 	}
 }
 

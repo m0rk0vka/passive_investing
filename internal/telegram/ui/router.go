@@ -11,12 +11,20 @@ import (
 	"github.com/m0rk0vka/passive_investing/internal/services/domain"
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/entities"
 	"github.com/m0rk0vka/passive_investing/internal/telegram/ui/renderers"
+	"github.com/m0rk0vka/passive_investing/pkg/moex"
 	domainEntities "github.com/m0rk0vka/passive_investing/pkg/telegram/entities"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/messagedeleter"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/messageeditor"
 	"github.com/m0rk0vka/passive_investing/pkg/telegram/services/messagesender"
+	"github.com/shopspring/decimal"
 	"go.uber.org/zap"
 )
+
+// Stub MOEX prices for local dev. Replace with real ISINs as needed.
+var stubMoexPrices = map[string]decimal.Decimal{
+	"RU000A1038V6": decimal.NewFromFloat(1.52),  // LQDT
+	"RU000A108157": decimal.NewFromFloat(14.80), // OBLG
+}
 
 const (
 	msgSessionExpired = "please run new /ui command"
@@ -52,6 +60,7 @@ func NewTelegramBotVisualizer(ctx context.Context, client *http.Client, token st
 	accountRepo := repository.NewAccountRepository(db)
 	virtualPortfolioRepo := repository.NewVirtualPortfolioRepository(db)
 	cashFlowRepo := repository.NewCashFlowRepository(db)
+	buyingRuleRepo := repository.NewBuyingRuleRepository(db)
 
 	// Initialize domain services
 	idResolver := domain.NewPortfolioIDResolver(virtualPortfolioRepo)
@@ -65,6 +74,10 @@ func NewTelegramBotVisualizer(ctx context.Context, client *http.Client, token st
 	summaryService := services.NewPortfolioSummaryService(idResolver, snapshotAggregator, cashFlowRepo, profitCalculatorService)
 	positionsService := services.NewPortfolioPositionsService(idResolver, snapshotAggregator, percentageCalculator)
 
+	moexClient := moex.NewStubClient(stubMoexPrices)
+	buyingRulesService := services.NewBuyingRulesService(buyingRuleRepo, idResolver, snapshotAggregator, moexClient, cashFlowRepo)
+	cashflowHistoryService := services.NewCashflowHistoryService(idResolver, cashFlowRepo, accountRepo)
+
 	return &telegramBotVisualizer{
 		ctx:    ctx,
 		logger: logger,
@@ -74,7 +87,10 @@ func NewTelegramBotVisualizer(ctx context.Context, client *http.Client, token st
 
 		sessionStore: NewSessionStore(),
 
-		renderer: NewRenderer(renderers.NewRenderers(listService, summaryService, periodsService, positionsService)),
+		renderer: NewRenderer(renderers.NewRenderers(
+			listService, summaryService, periodsService, positionsService,
+			buyingRulesService, buyingRulesService, cashflowHistoryService,
+		)),
 
 		messageSender:  messagesender.NewMessageSender(client, token),
 		messageDeleter: messagedeleter.NewMessageDeleter(client, token),
@@ -92,6 +108,7 @@ func (t *telegramBotVisualizer) Visualize(chatID int64) error {
 		}
 	}
 	session = NewSession(chatID)
+	session.SetState(entities.UIState{Screen: entities.ScreenHome})
 	t.sessionStore.Put(chatID, session)
 
 	err := t.RenderHomeScreen(session)
@@ -194,21 +211,43 @@ func (t *telegramBotVisualizer) processCallbackQuery(session Session, callbackQu
 			PortfolioID: session.State.PortfolioID,
 			Period:      prevPeriod,
 		})
-	default:
-		portfolioID, ok := entities.IsOpenPortfolio(callbackQuery.Data)
-		if !ok {
-			return fmt.Errorf("unknown callback query: %s", callbackQuery.Data)
-		}
-		lastPeriod, err := t.periodsService.GetLastPeriod(t.ctx, session.ChatID(), portfolioID)
-		if err != nil {
-			return fmt.Errorf("failed to get last period: %w", err)
-		}
+	case entities.CBNavBuyingRules:
 		session.PushCurrentState()
 		session.SetState(entities.UIState{
-			Screen:      entities.ScreenPortfolioSum,
-			PortfolioID: portfolioID,
-			Period:      lastPeriod,
+			Screen:      entities.ScreenBuyingRules,
+			PortfolioID: session.State.PortfolioID,
+			Period:      session.State.Period,
 		})
+	case entities.CBNavCashflows:
+		session.PushCurrentState()
+		session.SetState(entities.UIState{
+			Screen:      entities.ScreenCashflows,
+			PortfolioID: session.State.PortfolioID,
+			Period:      session.State.Period,
+		})
+	default:
+		if portfolioID, ok := entities.IsOpenPortfolio(callbackQuery.Data); ok {
+			lastPeriod, err := t.periodsService.GetLastPeriod(t.ctx, session.ChatID(), portfolioID)
+			if err != nil {
+				return fmt.Errorf("failed to get last period: %w", err)
+			}
+			session.PushCurrentState()
+			session.SetState(entities.UIState{
+				Screen:      entities.ScreenPortfolioSum,
+				PortfolioID: portfolioID,
+				Period:      lastPeriod,
+			})
+		} else if amount, ok := entities.IsSelectAmount(callbackQuery.Data); ok {
+			session.PushCurrentState()
+			session.SetState(entities.UIState{
+				Screen:      entities.ScreenBuyingResult,
+				PortfolioID: session.State.PortfolioID,
+				Period:      session.State.Period,
+				TopUpAmount: amount,
+			})
+		} else {
+			return fmt.Errorf("unknown callback query: %s", callbackQuery.Data)
+		}
 	}
 
 	t.sessionStore.Put(session.ChatID(), session)

@@ -1,0 +1,7 @@
+package entities
+
+type BuyingRules struct {
+	positions []PortfolioPositions
+}
+
+func (br BuyingRules) GetCurrentPrices()

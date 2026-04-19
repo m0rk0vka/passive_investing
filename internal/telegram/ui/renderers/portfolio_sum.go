@@ -55,6 +55,11 @@ func (r *PortfolioSumRenderer) Render(ctx context.Context, userID int64, st enti
 		domainEntities.NewInlineKeyboardButton("Периоды", entities.CBNavPeriods)))
 
 	rows = append(rows, domainEntities.NewInlineKeyboardRow(
+		domainEntities.NewInlineKeyboardButton("📥 Пополнения", entities.CBNavCashflows),
+		domainEntities.NewInlineKeyboardButton("🛒 Пополнить", entities.CBNavBuyingRules),
+	))
+
+	rows = append(rows, domainEntities.NewInlineKeyboardRow(
 		domainEntities.NewInlineKeyboardButton("⬅️ Назад", entities.CBBack),
 		domainEntities.NewInlineKeyboardButton("✖️ Закрыть", entities.CBClose),
 	))

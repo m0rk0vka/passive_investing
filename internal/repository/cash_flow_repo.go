@@ -118,6 +118,37 @@ func (r *CashFlowRepository) GetDepositsInfo(ctx context.Context, accountIDs []i
 	return &info, nil
 }
 
+// ListAllDeposits returns all deposit operations for the given accounts, ordered by date descending.
+func (r *CashFlowRepository) ListAllDeposits(ctx context.Context, accountIDs []int64) ([]DepositsInfo, error) {
+	if len(accountIDs) == 0 {
+		return []DepositsInfo{}, nil
+	}
+
+	query := `
+		SELECT amount, currency, operation_date
+		FROM cash_flow_operation
+		WHERE account_id = ANY($1)
+		  AND operation_type = 'DEPOSIT'
+		ORDER BY operation_date DESC
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, accountIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query all deposits: %w", err)
+	}
+	defer rows.Close()
+
+	var infos []DepositsInfo
+	for rows.Next() {
+		var info DepositsInfo
+		if err := rows.Scan(&info.TotalAmount, &info.Currency, &info.OperationDate); err != nil {
+			return nil, fmt.Errorf("failed to scan deposit: %w", err)
+		}
+		infos = append(infos, info)
+	}
+	return infos, rows.Err()
+}
+
 // GetDepositsInfo returns aggregated information about deposits for given accounts up to and including the specified period
 // Period format: "2025-10" (YYYY-MM)
 func (r *CashFlowRepository) GetDepositsInfos(

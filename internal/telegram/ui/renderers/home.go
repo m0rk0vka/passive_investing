@@ -14,9 +14,8 @@ func (r *HomeRenderer) Render(ctx context.Context, userID int64, st entities.UIS
 
 	kb := domainEntities.NewInlineKeyboardMarkup(
 		domainEntities.NewInlineKeyboardRow(domainEntities.NewInlineKeyboardButton("Портфели", entities.CBNavPortfolios)),
+		domainEntities.NewInlineKeyboardRow(domainEntities.NewInlineKeyboardButton("📥 Пополнения", entities.CBNavCashflows)),
 		domainEntities.NewInlineKeyboardRow(domainEntities.NewInlineKeyboardButton("Создать виртуальный портфель", "todo:vportfolio_create")),
-		domainEntities.NewInlineKeyboardRow(domainEntities.NewInlineKeyboardButton("Правила пополнения", "todo:funding_rules")),
-		domainEntities.NewInlineKeyboardRow(domainEntities.NewInlineKeyboardButton("Правила портфеля", "todo:portfolio_rules")),
 		domainEntities.NewInlineKeyboardRow(domainEntities.NewInlineKeyboardButton("✖️ Закрыть", entities.CBClose)),
 	)
 

@@ -1,0 +1,22 @@
+{
+  "PeriodStart": "2026-03-01T00:00:00Z",
+  "PeriodEnd": "2026-03-31T00:00:00Z",
+  "AccountNumber": "ANON_e58a18de7d8dd7c5",
+  "ClientName": "ANON_fbe727e1089b04a8",
+  "ClientINN": "ANON_0de7f500b0aaad49",
+  "CashBalance": "0.32",
+  "TotalAssets": "700244.55",
+  "Positions": [
+    {
+      "ISIN": "RU000A1014L8",
+      "Name": "LQDT ETF, 3915,",
+      "Qty": "357870",
+      "Price": "1.9567",
+      "MarketValue": "700244.23",
+      "Currency": "RUR"
+    }
+  ],
+  "CashFlow": [],
+  "SecuritiesFlow": [],
+  "ReportDate": "2026-04-19T00:00:00Z"
+}

@@ -58,12 +58,20 @@ func hashString(s string) string {
 	return fmt.Sprintf("ANON_%x", h[:8])
 }
 
-func TestParsePositions_GoldenFiles(t *testing.T) {
-	// Получаем список всех xlsx файлов в data/raw
-	rawDir := "../../data/raw"
+func rawXLSXFiles(t *testing.T) []string {
+	t.Helper()
+	const rawDir = "../../data/raw"
+	if _, err := os.Stat(rawDir); os.IsNotExist(err) {
+		t.Skip("data/raw not found — personal reports required, skipping test")
+	}
 	files, err := filepath.Glob(filepath.Join(rawDir, "*.xlsx"))
 	require.NoError(t, err, "failed to list xlsx files")
 	require.NotEmpty(t, files, "no xlsx files found in data/raw")
+	return files
+}
+
+func TestParsePositions_GoldenFiles(t *testing.T) {
+	files := rawXLSXFiles(t)
 
 	for _, filePath := range files {
 		fileName := filepath.Base(filePath)
@@ -121,12 +129,7 @@ func TestParsePositions_GoldenFiles(t *testing.T) {
 }
 
 func TestParsePositions_BasicValidation(t *testing.T) {
-	// Получаем первый доступный файл для базовой проверки
-	rawDir := "../../data/raw"
-	files, err := filepath.Glob(filepath.Join(rawDir, "*.xlsx"))
-	require.NoError(t, err)
-	require.NotEmpty(t, files)
-
+	files := rawXLSXFiles(t)
 	filePath := files[0]
 	f, err := excelize.OpenFile(filePath)
 	require.NoError(t, err)
